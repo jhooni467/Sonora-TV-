@@ -135,8 +135,8 @@ function renderLyricsAt(positionMs){
    box.append(row);
   }
  }
- const activeLine=lyricLines[active],nextStart=lyricLines[active+1]?.startMs??(duration*1000||activeLine.startMs+4500);
- const ratio=Math.max(0,Math.min(1,(positionMs-activeLine.startMs)/Math.max(1,nextStart-activeLine.startMs)));
+ const activeLine=lyricLines[active],lineEnd=lyricLines[active+1]?.startMs??(duration*1000||activeLine.startMs+4500);
+ const ratio=Math.max(0,Math.min(1,(positionMs-activeLine.startMs)/Math.max(1,lineEnd-activeLine.startMs)));
  const activeNode=box.querySelector('.lrc-line.active');if(!activeNode)return;
  if(lyricsAnimationMode==='recorrer'&&lastActiveLyric!==active)activeNode.scrollIntoView({behavior:'smooth',block:'center'});
  lastActiveLyric=active;
