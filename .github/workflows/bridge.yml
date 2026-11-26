@@ -1,0 +1,36 @@
+name: SONORA Bridge validation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install bridge dependencies
+        working-directory: server
+        run: npm install
+      - name: Check bridge syntax
+        run: node --check server/server.js
+      - name: Test TV-generated code, phone joining and WebSocket recovery
+        working-directory: server
+        run: node smoke-test.js
+      - name: Validate homepage and receiver JavaScript
+        run: node server/check-html.js
+      - name: Check pairing configuration and page wiring
+        run: |
+          test -s bridge-config.json
+          node -e "const c=require('./bridge-config.json'); if(c.version!==1 || !('bridgeUrl' in c)) process.exit(1)"
+          grep -q "bridge-config.json" receiver.html
+          grep -q "CONECTAR SONORA" index.html
