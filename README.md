@@ -2,16 +2,38 @@
 
 Reproductor de música web creado exclusivamente para televisores. No necesita APK ni instalación: se abre desde el navegador de la TV.
 
-## Pantalla del reproductor
+## Dos vistas que trabajan juntas
 
-- Interfaz de pantalla completa en formato horizontal.
-- Portada grande a la izquierda, nombre de canción y artista debajo.
-- Controles de reproducción con iconografía SVG propia, sin emojis ni caracteres usados como iconos.
-- Diseño de portada predeterminado para canciones que no tengan imagen.
-- Zona de letras a la derecha; se puede escribir o pegar manualmente la letra de cada canción.
-- Texto de la interfaz no seleccionable.
-- Menú superior para biblioteca, favoritos, añadir archivos, añadir enlaces y activar pantalla completa.
-- Navegación con flechas, OK y teclas multimedia cuando el navegador/televisor las admite.
+### 1. Inicio y biblioteca
+
+Se conserva la pantalla principal de SONORA TV con:
+- Navegación de biblioteca y favoritos.
+- Tarjeta principal para agregar música.
+- Lista de canciones y acciones de favorito/eliminar.
+- Reproductor compacto fijo en la parte inferior.
+- Botón del reproductor compacto para abrir la vista completa.
+
+### 2. Reproductor completo
+
+Al seleccionar una canción desde la lista se abre una vista independiente a pantalla completa:
+- Portada grande a la izquierda.
+- Nombre de la canción y artista debajo.
+- Controles de anterior, reproducir y siguiente.
+- Barra de progreso y volumen.
+- Aleatorio, favoritos y repetición.
+- Pantalla de letras a la derecha.
+- Edición manual de letras por canción.
+- Menú de opciones para volver a la biblioteca o solicitar pantalla completa del navegador.
+
+La pantalla completa no reemplaza el inicio: se abre sobre él y se puede cerrar para volver a la biblioteca.
+
+## Reglas visuales
+
+- Interfaz para televisión en formato horizontal.
+- Controles e iconos SVG propios; no se usan emojis como iconos de acción.
+- Portada gráfica predeterminada para canciones sin carátula.
+- Textos de interfaz no seleccionables; los campos de edición conservan selección para poder escribir.
+- Escalado para distintas resoluciones de televisor.
 
 ## Paleta oficial
 
@@ -26,7 +48,7 @@ Reproductor de música web creado exclusivamente para televisores. No necesita A
 
 - Reproducir archivos de audio compatibles.
 - Añadir enlaces directos HTTP/HTTPS a archivos de audio.
-- Añadir una portada opcional a canciones por enlace.
+- Añadir portada por enlace para canciones agregadas desde URL.
 - Biblioteca persistente mediante IndexedDB cuando el navegador lo permite.
 - Favoritos, reproducción aleatoria, repetición, volumen y barra de progreso.
 - Eliminar canciones de la biblioteca.
