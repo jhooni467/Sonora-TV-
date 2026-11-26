@@ -325,6 +325,19 @@ input[type=range]{accent-color:#FFB86B}
 .receiver-host{position:fixed;inset:0;z-index:70;visibility:hidden;opacity:0;pointer-events:none;transition:opacity .16s ease;background:#05070b}
 .receiver-host.open{visibility:visible;opacity:1;pointer-events:auto}
 .receiver-host iframe{display:block;width:100%;height:100%;border:0;background:#05070b}
+
+/* Apple Music-inspired timed lyrics: line lift, word focus and progressive glyph reveal */
+.fp-lyrics-line{animation:fp-lyric-enter .48s cubic-bezier(.2,.75,.25,1) both}
+.fp-lyric-char{display:inline-block;color:rgba(210,226,236,.38);opacity:.58;transform:translateY(2px);transition:color .18s ease,opacity .18s ease,transform .18s ease,text-shadow .2s ease;white-space:pre}
+.fp-lyric-char.revealed{color:#F5FFFF;opacity:1;transform:translateY(0);text-shadow:0 0 16px rgba(83,242,184,.25)}
+.fp-lyric-word{display:inline-block;color:rgba(210,226,236,.4);opacity:.65;transition:color .2s ease,opacity .2s ease,text-shadow .22s ease,transform .22s ease;white-space:pre}
+.fp-lyric-word.sung{color:rgba(83,242,184,.88);opacity:1}
+.fp-lyric-word.current{color:#FFFFFF;opacity:1;transform:scale(1.035);text-shadow:0 0 22px rgba(83,242,184,.5)}
+.fp-lyrics-line.is-active{color:#FFFFFF;opacity:1!important}
+.fp-lyrics-line.is-past{opacity:.42!important;transform:scale(.97)}
+.fp-lyrics-line.is-future{opacity:.34!important;transform:scale(.97)}
+@keyframes fp-lyric-enter{from{opacity:0;transform:translateY(22px) scale(.98);filter:blur(5px)}to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
+@media(prefers-reduced-motion:reduce){.fp-lyrics-line,.fp-lyric-char,.fp-lyric-word{animation:none!important;transition:none!important}}
 </style>
 <body>
 <div class="app">
@@ -476,18 +489,62 @@ function publishLibraryPlayback(){
 }
 function openReceiver(){if(receiverFrame.dataset.loaded!=='true'){receiverFrame.src='receiver.html';receiverFrame.dataset.loaded='true'}receiverOverlay.classList.add('open');receiverOverlay.setAttribute('aria-hidden','false');}
 function renderRemoteLyrics(){
- const box=$('fullLyricsContent');if(!box)return;box.replaceChildren();
- if(remoteLyricsLines.length){
-  const position=Number(remoteTvPlayback.positionMs)||0;
-  let active=remoteLyricsLines.findIndex((line,i)=>Number(line.startMs)<=position&&(i===remoteLyricsLines.length-1||Number(remoteLyricsLines[i+1].startMs)>position));
-  if(active<0)active=0;
-  const start=Math.max(0,active-1),end=Math.min(remoteLyricsLines.length,active+3);
-  for(let i=start;i<end;i++){const p=document.createElement('p');p.className='fp-lyrics-line';p.textContent=String(remoteLyricsLines[i].text||'');p.style.opacity=i===active?'1':'.55';box.append(p)}
- }else if(remoteLyricsText){const p=document.createElement('p');p.className='fp-lyrics-line';p.textContent=remoteLyricsText;box.append(p)}
- else renderFullLyrics(current());
+ const box=$('fullLyricsContent');if(!box)return;
+ if(!remoteLyricsLines.length){
+  box.replaceChildren();
+  if(remoteLyricsText){const p=document.createElement('p');p.className='fp-lyrics-line is-active';p.textContent=remoteLyricsText;box.append(p);}
+  else renderFullLyrics(current());
+  box.dataset.lyricsLayout='plain:'+remoteLyricsText;
+  return;
+ }
+ const position=Math.max(0,Number(remoteTvPlayback.positionMs)||0);
+ let active=remoteLyricsLines.findIndex((line,i)=>Number(line.startMs)<=position&&(i===remoteLyricsLines.length-1||Number(remoteLyricsLines[i+1].startMs)>position));
+ if(active<0)active=0;
+ const first=Math.max(0,active-1),last=Math.min(remoteLyricsLines.length,active+3);
+ const sourceKey=remoteLyricsLines.map(line=>String(line.startMs)+'|'+String(line.text)+'|'+(Array.isArray(line.words)?line.words.length:0)).join('~');
+ const layoutKey=sourceKey+':'+first+':'+last+':'+active;
+ if(box.dataset.lyricsLayout!==layoutKey){
+  box.replaceChildren();
+  for(let i=first;i<last;i++){
+   const data=remoteLyricsLines[i],row=document.createElement('p');
+   row.className='fp-lyrics-line '+(i===active?'is-active':i<active?'is-past':'is-future');
+   row.dataset.index=String(i);
+   if(Array.isArray(data.words)&&data.words.length){
+    data.words.forEach(word=>{
+     const span=document.createElement('span');span.className='fp-lyric-word';span.textContent=String(word.text||'');span.dataset.start=String(Number(word.startMs)||0);row.append(span);
+    });
+   }else{
+    Array.from(String(data.text||'')).forEach(char=>{
+     const span=document.createElement('span');span.className='fp-lyric-char';span.textContent=char;row.append(span);
+    });
+   }
+   box.append(row);
+  }
+  box.dataset.lyricsLayout=layoutKey;
+ }
+ const activeData=remoteLyricsLines[active],lineStart=Number(activeData.startMs)||0;
+ const nextLineStart=Number(remoteLyricsLines[active+1]?.startMs);
+ const lineEnd=Number.isFinite(nextLineStart)&&nextLineStart>lineStart?nextLineStart:Math.max(lineStart+2500,Number(remoteTvPlayback.durationMs)||lineStart+4500);
+ const progress=Math.max(0,Math.min(1,(position-lineStart)/Math.max(1,lineEnd-lineStart)));
+ const activeRow=box.querySelector('.fp-lyrics-line.is-active');if(!activeRow)return;
+ const chars=activeRow.querySelectorAll('.fp-lyric-char');
+ if(chars.length){
+  const revealed=Math.min(chars.length,Math.floor(progress*chars.length));
+  chars.forEach((node,index)=>node.classList.toggle('revealed',index<revealed));
+ }
+ const words=activeRow.querySelectorAll('.fp-lyric-word');
+ if(words.length){
+  let currentWord=-1;
+  words.forEach((node,index)=>{
+   const startMs=Number(node.dataset.start);
+   if(startMs<=position)currentWord=index;
+  });
+  words.forEach((node,index)=>{
+   node.classList.toggle('sung',index<currentWord);
+   node.classList.toggle('current',index===currentWord);
+  });
+ }
 }
-
-
 const ICONS={play:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13L19 12z"/></svg>',pause:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M8 5v14M16 5v14"/></svg>',heartOn:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.8 8.8c0 5.1-8.8 11-8.8 11s-8.8-5.9-8.8-11A4.7 4.7 0 0 1 12 6.5a4.7 4.7 0 0 1 8.8 2.3Z"/></svg>',heartOff:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 8.8c0 5.1-8.8 11-8.8 11s-8.8-5.9-8.8-11A4.7 4.7 0 0 1 12 6.5a4.7 4.7 0 0 1 8.8 2.3Z"/></svg>',remove:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M10 7V4h4v3M8 7l1 13h6l1-13M10 11v5M14 11v5"/></svg>',note:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>'};
 var DEFAULT_COVER='data:image/svg+xml;charset=utf-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800"><defs><linearGradient id="a" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#0B2558"/><stop offset=".55" stop-color="#1C618B"/><stop offset="1" stop-color="#3FBFC0"/></linearGradient><radialGradient id="b"><stop stop-color="#53F2B8" stop-opacity=".95"/><stop offset="1" stop-color="#53F2B8" stop-opacity="0"/></radialGradient></defs><rect width="800" height="800" rx="90" fill="url(#a)"/><circle cx="620" cy="180" r="310" fill="url(#b)"/><circle cx="400" cy="400" r="275" fill="none" stroke="#D0FEFF" stroke-opacity=".28" stroke-width="3"/><circle cx="400" cy="400" r="222" fill="none" stroke="#D0FEFF" stroke-opacity=".24" stroke-width="3"/><circle cx="400" cy="400" r="165" fill="none" stroke="#53F2B8" stroke-opacity=".65" stroke-width="8"/><path d="M310 270v260l235-130z" fill="#53F2B8"/><circle cx="400" cy="400" r="38" fill="#0B2558" stroke="#D0FEFF" stroke-width="7"/></svg>');
 
