@@ -214,6 +214,65 @@ body.full-open{overflow:hidden}body.full-open .app,body.full-open .player{visibi
 @media(min-width:1900px){.fp-cover{width:min(35vw,55vh,760px)}.fp-meta-pill{min-height:76px}.fp-artist-pill{min-height:60px}.fp-lyrics-line{font-size:clamp(30px,1.8vw,46px)}}
 @media(max-width:1100px){.full-player{grid-template-columns:minmax(360px,47%) minmax(0,53%)}.fp-left{padding-left:22px;padding-right:22px}.fp-cover{width:min(39vw,49vh,490px)}.fp-transport{gap:12px}.fp-control{width:48px;height:48px}.fp-play{width:82px;height:82px}.fp-progress{width:94%}}
 @media(max-height:720px) and (min-width:760px){.fp-left{padding-top:12px;padding-bottom:12px}.fp-content{gap:clamp(7px,1vh,12px)}.fp-cover{width:min(32vw,43vh,460px)}.fp-meta-pill{min-height:42px;font-size:clamp(16px,1.25vw,22px)}.fp-artist-pill{min-height:34px;font-size:clamp(14px,1vw,18px)}.fp-play{width:74px;height:74px}.fp-control{width:48px;height:48px}.fp-tools{gap:20px}.fp-tool{width:38px;height:38px}}
+
+/* SONORA unified dark theme */
+:root{
+  color-scheme:dark;
+  --navy:#10141E;--blue:#202838;--larkspur:#FFB86B;--lemonade:#E89B59;
+  --aventurine:#FFB86B;--spearmint:#090B10;--paper:#171C26;--ink:#F3F4F6;
+  --muted:#AEB7C6;--line:rgba(255,255,255,.09);--focus:#FFD09B;
+}
+html,body{background:#090B10;color:#F3F4F6}
+body{background:radial-gradient(ellipse at 78% 0%,rgba(255,184,107,.09),transparent 42%),linear-gradient(135deg,#090B10,#10141E 62%,#0B1019)}
+.sidebar{background:#111722;color:#F3F4F6;box-shadow:0 18px 50px rgba(0,0,0,.25)}
+.brand small,.nav-label{color:#A9B3C3}
+.nav button{color:#D3D9E4}.nav button .nav-icon{color:#FFB86B}
+.nav button.active{background:rgba(255,184,107,.12);border-color:rgba(255,184,107,.18);color:#fff;box-shadow:inset 4px 0 #FFB86B}
+.nav button.active .nav-icon{color:#FFB86B}
+.side-note{border-color:rgba(255,255,255,.1);background:rgba(255,255,255,.045);color:#B9C2D0}
+.side-action{border-color:rgba(255,255,255,.1);color:#F3F4F6}
+.topbar h1,.section-head h2,.queue-head h2{color:#F3F4F6}
+.topbar p,.muted,.queue-foot,.footer-note{color:#AEB7C6}
+.eyebrow{color:#FFB86B}
+.tv-tag{background:#1B2331;border-color:rgba(255,255,255,.08);color:#F3F4F6}
+.tv-dot{background:#8D98AA;box-shadow:0 0 0 4px rgba(141,152,170,.15)}
+.remote-connect-btn{border:1px solid rgba(255,255,255,.1);cursor:pointer}
+.remote-connect-btn.connected .tv-dot{background:#65D6A6;box-shadow:0 0 0 4px rgba(101,214,166,.14)}
+.phone-media-tag{max-width:32vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hero{background:linear-gradient(122deg,#151B27 0%,#202A3C 68%,#2B3548 100%);box-shadow:0 18px 42px rgba(0,0,0,.25)}
+.hero .eyebrow{color:#FFB86B}.hero p{color:#C0C9D7}
+.primary{background:#FFB86B;color:#211307;box-shadow:0 9px 24px rgba(255,184,107,.15)}
+.secondary{background:#232C3A;color:#F3F4F6;border-color:rgba(255,255,255,.1)}
+.secondary:hover{background:#2C3748}.secondary.dark{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.13)}
+.library,.queue{background:#151A24;border-color:rgba(255,255,255,.08);box-shadow:0 12px 36px rgba(0,0,0,.18)}
+.library-empty,.track-row{background:#1D2532}
+.track-row:hover{background:#273346;border-color:rgba(255,184,107,.2)}
+.track-row.current{background:#2B2A29;border-color:rgba(255,184,107,.28);box-shadow:inset 4px 0 #FFB86B}
+.empty-copy strong,.track-meta strong{color:#F3F4F6}
+.empty-copy span,.track-meta span,.track-length{color:#AEB7C6}
+.empty-icon{background:linear-gradient(145deg,#FFB86B,#D68F4B);color:#211307}
+.count{background:#2A2D35;color:#FFD09B}
+.mini-btn{color:#FFD09B}.mini-btn:hover,.mini-btn.selected{background:rgba(255,184,107,.17);color:#FFD09B}
+.player{background:rgba(21,26,36,.97);border-color:rgba(255,255,255,.1);box-shadow:0 18px 45px rgba(0,0,0,.35)}
+.now-meta strong{color:#F3F4F6}.now-meta span{color:#AEB7C6}
+.mini-art{background:linear-gradient(145deg,#29364A,#151A24);color:#FFB86B}
+.icon-btn{background:#242D3C;color:#E7EBF2}
+.icon-btn:hover,.icon-btn.on{background:#343E4E;color:#FFB86B}
+.play-btn{background:#FFB86B;color:#211307}.play-btn:hover{background:#FFD09B;color:#211307}
+input[type=range]{accent-color:#FFB86B}
+.volume{color:#FFB86B}
+.modal{background:#171C26;border-color:rgba(255,184,107,.28)}
+.modal h2{color:#F3F4F6}.modal p,.field label{color:#AEB7C6}
+.field input{background:#0E131C;border-color:rgba(255,255,255,.12);color:#F3F4F6}
+.modal-bg{background:rgba(0,0,0,.78)}
+.full-player{background:#090B10;color:#F3F4F6}
+.fp-meta-pill{background:#1E2633;color:#F3F4F6}.fp-artist-pill{background:#252D3A;color:#B9C2D0}
+.fp-control{color:#E4E8F0}.fp-play{background:#FFB86B;color:#211307}
+.fp-progress{color:#AEB7C6}
+.fp-tool{color:#C3CBD8}
+.toast{background:#1D2532;border-color:rgba(255,184,107,.35);color:#fff}
+@media(max-width:1120px){.phone-media-tag{display:none}}
+
 </style>
 <body>
 <div class="app">
@@ -240,7 +299,12 @@ body.full-open{overflow:hidden}body.full-open .app,body.full-open .player{visibi
         <h1 id="pageTitle">Tu música, a tu manera.</h1>
         <p>Todo lo que quieres escuchar, en un solo lugar.</p>
       </div>
-      <div class="top-meta"><span class="tv-tag"><span class="tv-dot"></span> DISEÑADO PARA TV</span></div>
+      <div class="top-meta">
+        <button class="tv-tag remote-connect-btn" id="remoteConnectBtn" type="button" aria-label="Conectar Sonora Remote">
+          <span class="tv-dot" id="remoteStatusDot"></span><span id="remoteStatusLabel">CONECTAR CONTROL</span>
+        </button>
+        <span class="tv-tag phone-media-tag" id="remotePhoneLine">TELÉFONO SIN CONECTAR</span>
+      </div>
     </header>
     <section class="dashboard">
       <div class="left-column">
@@ -347,6 +411,21 @@ body.full-open{overflow:hidden}body.full-open .app,body.full-open .player{visibi
     </form>
   </div>
 </div>
+<div class="modal-bg" id="remoteModal" role="dialog" aria-modal="true" aria-labelledby="remoteModalTitle">
+  <div class="modal">
+    <h2 id="remoteModalTitle">Conectar Sonora Remote</h2>
+    <p>Abre esta página desde la dirección local que muestra Sonora Remote. Puedes usar el QR para rellenar el código automáticamente o escribir el PIN de seis cifras.</p>
+    <div class="field">
+      <label for="remotePin">PIN de emparejamiento</label>
+      <input id="remotePin" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="123456">
+    </div>
+    <p id="remoteHelp">El teléfono y el televisor deben estar conectados a la misma red Wi‑Fi.</p>
+    <div class="modal-actions">
+      <button type="button" class="secondary" id="remoteCloseBtn">Cerrar</button>
+      <button type="button" class="primary" id="remotePairBtn">Emparejar</button>
+    </div>
+  </div>
+</div>
 <script>
 (()=>{'use strict';
 const $=id=>document.getElementById(id),audio=$('audio');
@@ -441,6 +520,138 @@ document.addEventListener('keydown',e=>{
     e.preventDefault();togglePlay();
   }
 });
+
+
+const remoteLink={socket:null,paired:false,pin:''};
+function setRemoteStatus(label,connected){
+  $('remoteStatusLabel').textContent=label;
+  $('remoteConnectBtn').classList.toggle('connected',!!connected);
+  $('remoteStatusDot').style.background=connected?'#65D6A6':'#8D98AA';
+}
+function openRemoteModal(){
+  $('remoteModal').classList.add('open');
+  $('remoteHelp').textContent=location.protocol==='https:'
+    ?'La versión pública usa HTTPS y el navegador bloquea conexiones locales sin cifrar. Abre la dirección http:// que muestra Sonora Remote.'
+    :'Introduce el PIN que aparece en Sonora Remote.';
+  $('remotePin').focus();
+}
+function closeRemoteModal(){$('remoteModal').classList.remove('open')}
+function connectRemote(pin){
+  const code=String(pin||'').replace(/\\D/g,'').slice(0,6);
+  if(code.length!==6){$('remoteHelp').textContent='El PIN debe tener seis cifras.';return}
+  if(location.protocol!=='http:'){
+    $('remoteHelp').textContent='Abre Sonora TV con la dirección local http:// que muestra Sonora Remote; esta página pública HTTPS no puede abrir el canal local.';
+    return;
+  }
+  if(!location.hostname){$('remoteHelp').textContent='No se detectó la dirección local del teléfono.';return}
+  try{if(remoteLink.socket)remoteLink.socket.close()}catch(_){}
+  remoteLink.pin=code;
+  setRemoteStatus('CONECTANDO…',false);
+  $('remoteHelp').textContent='Conectando con el teléfono…';
+  const socket=new WebSocket('ws://'+location.hostname+':8766');
+  remoteLink.socket=socket;
+  socket.onopen=()=>socket.send(JSON.stringify({type:'pair',pin:code}));
+  socket.onmessage=async event=>{
+    let data;try{data=JSON.parse(event.data)}catch(_){return}
+    if(data.type==='paired'){
+      remoteLink.paired=true;closeRemoteModal();setRemoteStatus('CONTROL CONECTADO',true);
+      toast('Sonora Remote está conectado.');sendTvState();return;
+    }
+    if(data.type==='pair_error'){
+      remoteLink.paired=false;setRemoteStatus('PIN INCORRECTO',false);
+      $('remoteHelp').textContent=data.message||'Código incorrecto. Revisa el PIN.';
+      return;
+    }
+    if(data.type==='command'){await runRemoteCommand(data);return}
+    if(data.type==='phone_media'){
+      const title=data.title||'Sin música del teléfono';
+      const artist=data.artist||'';
+      $('remotePhoneLine').textContent=data.playing?'TELÉFONO · '+title+' — '+artist:'TELÉFONO · '+title;
+      $('remotePhoneLine').title=artist;
+    }
+  };
+  socket.onerror=()=>{
+    remoteLink.paired=false;setRemoteStatus('SIN CONEXIÓN',false);
+    $('remoteHelp').textContent='No se pudo abrir el enlace. Confirma que el teléfono y el TV estén en la misma Wi‑Fi y abre la dirección local.';
+  };
+  socket.onclose=()=>{
+    if(remoteLink.socket===socket){
+      remoteLink.paired=false;setRemoteStatus('CONECTAR CONTROL',false);
+      $('remotePhoneLine').textContent='TELÉFONO SIN CONECTAR';
+    }
+  };
+}
+async function runRemoteCommand(data){
+  switch(data.action){
+    case 'toggle':await togglePlay();break;
+    case 'play':if(audio.paused)await togglePlay();break;
+    case 'pause':if(!audio.paused)audio.pause();break;
+    case 'next':next(true);break;
+    case 'previous':previous();break;
+    case 'seek':
+      if(Number.isFinite(audio.duration))audio.currentTime=Math.max(0,Math.min(audio.duration,Number(data.position)||0));
+      break;
+    case 'set_volume':{
+      const value=Math.max(0,Math.min(1,Number(data.value)||0));
+      audio.volume=value;$('volumeBar').value=String(value);$('fullVolumeBar').value=String(value);
+      try{localStorage.setItem('sonora-volume',String(value))}catch(_){}
+      break;
+    }
+    case 'load_url':{
+      const url=String(data.url||'');
+      if(!/^https?:\\/\\//i.test(url)){toast('El enlace recibido no es válido.');break}
+      await addUrl(url,String(data.title||'Audio del teléfono'),String(data.artist||'Archivo local'),String(data.cover||''));
+      const track=state.tracks.find(t=>t.url===url);
+      if(track)await select(track.id,true);
+      openFullPlayer();
+      break;
+    }
+    case 'open_library':closeFullPlayer();break;
+    case 'navigate':{
+      const direction=String(data.direction||'');
+      if(['up','down','left','right'].includes(direction))moveFocus(direction);
+      break;
+    }
+    case 'select':{
+      const active=document.activeElement;
+      if(active&&typeof active.click==='function')active.click();
+      break;
+    }
+  }
+  sendTvState();
+}
+function sendTvState(){
+  const socket=remoteLink.socket;
+  if(!remoteLink.paired||!socket||socket.readyState!==WebSocket.OPEN)return;
+  const track=current();
+  try{
+    socket.send(JSON.stringify({
+      type:'tv_state',
+      title:track?track.title:'Sin canción',
+      artist:track?(track.artist||'Artista no disponible'):'Biblioteca de Sonora TV',
+      playing:!audio.paused,
+      position:Number.isFinite(audio.currentTime)?audio.currentTime:0,
+      duration:Number.isFinite(audio.duration)?audio.duration:0,
+      volume:audio.volume
+    }));
+  }catch(_){}
+}
+$('remoteConnectBtn').addEventListener('click',openRemoteModal);
+$('remoteCloseBtn').addEventListener('click',closeRemoteModal);
+$('remoteModal').addEventListener('click',event=>{if(event.target===$('remoteModal'))closeRemoteModal()});
+$('remotePairBtn').addEventListener('click',()=>connectRemote($('remotePin').value));
+$('remotePin').addEventListener('keydown',event=>{if(event.key==='Enter')connectRemote($('remotePin').value)});
+const qrPin=new URLSearchParams(location.search).get('pin');
+if(qrPin&&/^\\d{6}$/.test(qrPin)){
+  $('remotePin').value=qrPin;
+  setTimeout(()=>connectRemote(qrPin),500);
+}else if(location.protocol==='https:'){
+  $('remoteHelp').textContent='Para conectar el control, abre la dirección local http:// que muestra Sonora Remote.';
+}
+audio.addEventListener('play',sendTvState);
+audio.addEventListener('pause',sendTvState);
+audio.addEventListener('timeupdate',sendTvState);
+audio.addEventListener('loadedmetadata',sendTvState);
 
 async function init(){try{state.db=await openDb();state.tracks=(await dbAction('readonly','all'))||[];state.tracks.sort((a,b)=>(a.addedAt||0)-(b.addedAt||0))}catch(_){toast('El navegador no permite guardar la biblioteca. Los enlaces pueden funcionar mientras esta página esté abierta.')}try{const volume=Number(localStorage.getItem('sonora-volume'));if(Number.isFinite(volume)&&volume>=0&&volume<=1)$('volumeBar').value=String(volume)}catch(_){}audio.volume=Number($('volumeBar').value);render();if(state.tracks[0])select(state.tracks[0].id,false)}
 init();
