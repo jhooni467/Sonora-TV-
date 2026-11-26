@@ -143,22 +143,25 @@ input[type=range]{width:100%;margin:0;accent-color:var(--larkspur);cursor:pointe
   .small-tool{width:38px;height:38px}
   .progress-wrap{font-size:10px}
 }
-@media(max-width:760px){
-  .screen{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) minmax(180px,.58fr);overflow:auto}
-  html,body{height:auto;min-height:100%;overflow:auto}
-  .left-pane{padding:30px 18px 20px}
-  .left-content{gap:13px}
-  .cover-wrap{width:min(68vw,42vh,430px)}
-  .meta-pill{min-height:47px;width:94%;font-size:18px}
-  .artist-pill{min-height:38px}
-  .transport{gap:15px}
-  .play-btn{width:76px;height:76px}
-  .right-pane{min-height:230px;padding:65px 25px 35px}
-  .lyrics-heading{top:16px}
-  .lyrics-content{max-height:100%;padding:12px}
-  .corner-menu{width:52px;height:52px}
-  .menu-panel{top:76px;right:12px;width:min(440px,calc(100vw - 24px));max-height:78vh}
-  .lyrics-edit{top:9px;right:62px}
+
+/* Televisores compactos en horizontal: se conserva siempre la composición de dos zonas */
+@media(max-width:950px) and (orientation:landscape){
+  .screen{grid-template-columns:minmax(330px,46%) minmax(0,54%)}
+  .left-pane{padding:14px 16px}
+  .left-content{gap:9px}
+  .cover-wrap{width:min(34vw,43vh,390px);border-radius:30px}
+  .meta-pill{min-height:42px;font-size:17px}
+  .artist-pill{min-height:34px;font-size:14px}
+  .transport{gap:9px}
+  .control-btn{width:44px;height:44px}
+  .play-btn{width:72px;height:72px}
+  .progress-wrap{width:96%;gap:7px}
+  .left-tools{gap:13px}
+  .small-tool{width:38px;height:38px}
+  .lyrics-line{font-size:clamp(18px,2vw,26px)}
+  .lyrics-line.current{font-size:clamp(21px,2.2vw,29px)}
+  .corner-menu{width:52px;height:52px;right:13px;top:12px}
+  .menu-panel{top:73px;right:12px;width:min(390px,50vw);max-height:80vh}
 }
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 </style>
@@ -177,7 +180,7 @@ input[type=range]{width:100%;margin:0;accent-color:var(--larkspur);cursor:pointe
           <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M10 9v30M38 10 15 24l23 14V10Z" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/></svg>
         </button>
         <button class="control-btn play-btn" id="playBtn" aria-label="Reproducir" title="Reproducir">
-          <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M17 10.5v27M31 10.5v27" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"/></svg>
+          <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M16 9.5 38 24 16 38.5Z" fill="currentColor"/></svg>
         </button>
         <button class="control-btn" id="nextBtn" aria-label="Siguiente canción" title="Siguiente canción">
           <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M38 9v30M10 10l23 14-23 14V10Z" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/></svg>
