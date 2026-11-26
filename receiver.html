@@ -83,6 +83,7 @@ function handle(m){
   renderLyricsAt(audio.currentTime*1000);notifyParentLyrics();
  }
  if(m.type==='media-ready'){parentPlaybackActive=false;$('title').textContent=m.name||'Audio recibido';audio.src=new URL(m.url,bridge).href;audio.play().catch(()=>status('Archivo recibido · pulsa reproducir',true));publishPlayback(true);importMediaToLibrary(m);}
+ if(m.type==='media-saved'){importMediaToLibrary(m);}
  if(m.type==='stream-start'){parentPlaybackActive=false;$('title').textContent=m.name||'Audio en directo';if(m.artist)$('artist').textContent=m.artist;audio.src=new URL(m.url,bridge).href;audio.play().catch(()=>status('Transmisión lista · pulsa reproducir',true));publishPlayback(true);}
  if(m.type==='play'||m.type==='pause'||m.type==='toggle'||m.type==='stop'){
   if(parentPlaybackActive){notifyParentCommand(m.type==='stop'?'pause':m.type);return;}
