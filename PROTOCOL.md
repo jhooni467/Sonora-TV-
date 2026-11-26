@@ -9,7 +9,7 @@
 1. TV requests a session. The bridge returns a six-digit code, private TV token and 15-minute pairing lifetime.
 2. Phone scans the TV QR or enters the six digits and joins.
 3. Bridge returns a phone token and notifies TV with type=paired.
-4. Tokens are random and scoped to one room. Never display or log tokens.
+4. Both sockets exchange peer-status messages so each screen can reflect the other's connection. Tokens are random and scoped to one room. Never display or log tokens.
 
 ## Messages
 Supported types: play, pause, toggle, next, previous, seek, volume, metadata, lyrics, queue, stop, ping, paired, peer-status, media-ready and stream-start.
@@ -27,6 +27,11 @@ Supported types: play, pause, toggle, next, previous, seek, volume, metadata, ly
 ## Deployment
 This repository is a static GitHub Pages frontend plus a Node bridge. Deploy bridge using render.yaml (root directory server). Set PUBLIC_ORIGIN to the published SONORA TV site origin. Configure the frontend and Android app with the deployed HTTPS origin; use WSS for sockets.
 Pairing rooms and upload registry are in memory and reset on service restart. Files on free hosting may be ephemeral. Persistent storage is needed for durable file retention.
+
+## Connectivity recovery
+- The TV receiver retries its WebSocket with exponential backoff while the same session token remains valid.
+- On reconnect, the bridge reports the current opposite-peer presence to the newly connected socket.
+- A newly paired phone replaces and revokes the previous phone token for that room.
 
 ## Security and compatibility
 Use HTTPS/WSS in production. Pairing codes expire after 15 minutes. The prototype relays media through the bridge; it is not end-to-end encrypted. Audio codec support depends on the TV browser.
