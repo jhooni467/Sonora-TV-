@@ -322,8 +322,8 @@ input[type=range]{accent-color:#FFB86B}
 @media(max-width:620px){.full-player{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) minmax(0,.78fr);overflow:auto}.fp-left{padding:58px 16px 14px}.fp-content{height:auto;min-height:0;gap:10px}.fp-cover{width:min(62vw,36vh,320px)}.fp-right{min-height:250px;padding:56px 16px 18px;border-left:0;border-top:1px solid rgba(208,254,255,.08)}.fp-lyrics-heading{top:10px}.fp-menu-btn{width:46px;height:46px}.fp-options{top:68px}}
 
 /* Keep the TV receiver alive while the user returns to the library. */
-.receiver-host{position:fixed;inset:0;z-index:70;display:none;background:#05070b}
-.receiver-host.open{display:block}
+.receiver-host{position:fixed;inset:0;z-index:70;visibility:hidden;opacity:0;pointer-events:none;transition:opacity .16s ease;background:#05070b}
+.receiver-host.open{visibility:visible;opacity:1;pointer-events:auto}
 .receiver-host iframe{display:block;width:100%;height:100%;border:0;background:#05070b}
 </style>
 <body>
@@ -535,7 +535,7 @@ window.addEventListener('message',event=>{
  if(event.origin!==location.origin||!event.data||typeof event.data!=='object')return;
  const message=event.data;
  if(message.type==='sonora-tv:close-receiver'){
-  receiverOverlay.classList.remove('open');receiverOverlay.setAttribute('aria-hidden','true');
+  receiverOverlay.classList.remove('open');receiverOverlay.setAttribute('aria-hidden','true');document.getElementById('remoteConnectBtn').focus();
   return;
  }
  if(message.type==='sonora-tv:playback-state'){
