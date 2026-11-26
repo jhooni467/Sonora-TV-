@@ -26,6 +26,8 @@ No hay que introducir una URL de servidor en el teléfono. La URL se configura u
 
 GitHub Pages solo aloja los archivos web; no ejecuta el servidor Node.js ni WebSocket. El Bridge está preparado en `server/` y el despliegue se define en `render.yaml`.
 
+**Crear el servicio con un solo acceso:** [Desplegar SONORA Bridge en Render](https://render.com/deploy?repo=https://github.com/jhooni467/Sonora-TV-). Render abrirá la revisión del Blueprint para que conectes GitHub y confirmes el despliegue. <Cite ref="turn948624search1" />
+
 1. Abre el [Blueprint de SONORA TV en Render](https://dashboard.render.com/blueprint/new?repo=https://github.com/jhooni467/Sonora-TV-).
 2. Inicia sesión en Render y conecta la cuenta de GitHub si lo solicita.
 3. Revisa el servicio `sonora-tv-bridge` y pulsa **Apply** para crear el servicio.
