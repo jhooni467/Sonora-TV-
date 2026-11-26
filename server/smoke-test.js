@@ -28,6 +28,10 @@ async function openSocket(url){return new Promise((resolve,reject)=>{const ws=ne
   const metadataNotice=waitMessage(tv,m=>m.type==='metadata'&&m.title==='Connection test');phone.send(JSON.stringify({type:'metadata',title:'Connection test',artist:'SONORA'}));
   assert.equal((await metadataNotice).from,'phone');
 
+  const preferencesNotice=waitMessage(tv,m=>m.type==='preferences'&&m.theme==='aurora'&&m.lyricsAnimation==='fluida');
+  phone.send(JSON.stringify({type:'preferences',theme:'aurora',lyricsAnimation:'fluida'}));
+  assert.equal((await preferencesNotice).from,'phone','Phone personalization must reach the TV');
+
   const lyricsNotice=waitMessage(tv,m=>m.type==='lyrics'&&m.format==='lrc');
   phone.send(JSON.stringify({type:'lyrics',format:'lrc',text:'Primera línea\\nSegunda línea',lines:[{startMs:1200,text:'Primera línea',words:[{startMs:1200,text:'Primera '},{startMs:1600,text:'línea'}]},{startMs:2450,text:'Segunda línea'}]}));
   const receivedLyrics=await lyricsNotice;
