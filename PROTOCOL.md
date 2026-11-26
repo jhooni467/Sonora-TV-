@@ -21,7 +21,7 @@ Supported types: play, pause, toggle, next, previous, seek, volume, metadata, ly
 
 ## Audio
 - Complete file: phone POSTs raw bytes to /api/upload with bearer token and X-File-Name. Bridge stores it and notifies TV with media-ready. TV downloads the returned URL using its TV token.
-- Live stream: phone POSTs a chunked audio body to /api/stream/start with bearer token and X-Track-Title / X-Track-Artist. Bridge exposes a chunked HTTP audio response and notifies TV with stream-start. TV assigns the stream URL to HTMLAudioElement.
+- Live stream: phone first POSTs /api/stream/session with bearer token and X-Track-Title / X-Track-Artist. Bridge returns uploadUrl and playbackUrl and notifies TV with stream-start. Phone then PUTs the audio body to uploadUrl while TV GETs playbackUrl. The receiver uses playbackUrl as the HTMLAudioElement source.
 - WebSocket binary frames are relayed between paired peers (maximum 1 MiB per frame) for future transports.
 
 ## Deployment
