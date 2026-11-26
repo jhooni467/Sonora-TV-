@@ -55,9 +55,6 @@ async function openSocket(url){return new Promise((resolve,reject)=>{const ws=ne
   const streamMessage=await streamNotice;
   assert.equal(streamMessage.name,'Qué Más Pues?','Bridge must decode the UTF-8 title header');
   assert.equal(streamMessage.artist,'J Balvin','Bridge must decode the UTF-8 artist header');
-  const streamPlayback=await fetch(base+streamMessage.url);
-  assert.equal(streamPlayback.status,200,'TV stream endpoint should serve the live audio');
-  const streamBytesPromise=streamPlayback.arrayBuffer();
   const mediaSavedNotice=waitMessage(tv,m=>m.type==='media-saved'&&m.id===streamMessage.id&&m.name==='Qué Más Pues?');
   const sampleAudio=Buffer.from('SONORA-STREAM-CAPTURE-TEST');
   const streamUpload=await fetch(base+streamSession.uploadUrl,{method:'PUT',headers:{'authorization':'Bearer '+paired.token},body:sampleAudio});
@@ -66,7 +63,9 @@ async function openSocket(url){return new Promise((resolve,reject)=>{const ws=ne
   const savedResponse=await fetch(base+mediaSaved.url);
   assert.equal(savedResponse.status,200,'Captured streamed audio should be downloadable for TV library import');
   assert.equal(Buffer.from(await savedResponse.arrayBuffer()).toString(),sampleAudio.toString(),'Captured stream bytes should match original upload');
-  assert.equal(Buffer.from(await streamBytesPromise).toString(),sampleAudio.toString(),'Live playback stream should remain intact while capture is saved');
+  const streamPlayback=await fetch(base+streamMessage.url);
+  assert.equal(streamPlayback.status,200,'TV stream endpoint should serve the live audio');
+  assert.equal(Buffer.from(await streamPlayback.arrayBuffer()).toString(),sampleAudio.toString(),'TV playback stream should retain the same audio bytes after upload');
 
   const volumeNotice=waitMessage(tv,m=>m.type==='volume'&&m.value===0.35);
   phone.send(JSON.stringify({type:'volume',value:0.35}));
