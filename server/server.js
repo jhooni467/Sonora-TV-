@@ -39,9 +39,11 @@ wss.on('connection',ws=>{
  const {room,role}=ws.identity;
  if(role==='tv'){if(room.tv&&room.tv!==ws)room.tv.close(4001,'TV session replaced');room.tv=ws}
  else{if(room.phone&&room.phone!==ws)room.phone.close(4001,'Phone session replaced');room.phone=ws}
- // Notify the other device, not the socket that just connected.
+ // Notify both peers about the connection that just opened and the peer's current state.
  emit(room,{type:'peer-status',role,connected:true,deviceName:room.phoneName||'SONORA'},role==='tv'?'phone':'tv');
- if(role==='phone')emit(room,{type:'peer-status',role:'tv',connected:!!(room.tv&&room.tv.readyState===WebSocket.OPEN),deviceName:'SONORA TV'},'phone');
+ const otherRole=role==='tv'?'phone':'tv';
+ const otherSocket=role==='tv'?room.phone:room.tv;
+ emit(room,{type:'peer-status',role:otherRole,connected:!!(otherSocket&&otherSocket.readyState===WebSocket.OPEN),deviceName:otherRole==='tv'?'SONORA TV':(room.phoneName||'SONORA')},role);
  ws.on('message',(data,binary)=>{
   const target=role==='tv'?room.phone:room.tv;
   if(binary){if(target&&target.readyState===WebSocket.OPEN&&data.length<=1048576)target.send(data,{binary:true});return}
@@ -52,8 +54,9 @@ wss.on('connection',ws=>{
   else if(['play','pause','toggle','seek','volume','stop','ping'].includes(msg.type))emit(room,{...msg,from:'tv'},'phone');
  });
  ws.on('close',()=>{
-  if(role==='tv'&&room.tv===ws)room.tv=null;
-  if(role==='phone'&&room.phone===ws)room.phone=null;
+  const wasCurrent=role==='tv'?room.tv===ws:room.phone===ws;
+  if(!wasCurrent)return;
+  if(role==='tv')room.tv=null;else room.phone=null;
   emit(room,{type:'peer-status',role,connected:false},role==='tv'?'phone':'tv');
  });
 });
