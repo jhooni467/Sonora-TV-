@@ -1,85 +1,81 @@
 # SONORA TV
 
-Reproductor de música web creado para televisores. Puede utilizarse de dos maneras: desde el navegador integrado de la TV o dentro de la aplicación Android TV de Sonora.
+Reproductor de música web para televisores. La biblioteca y el reproductor completo funcionan en el navegador; la conexión con Sonora Remote se inicia desde la TV.
 
-## Dos vistas que trabajan juntas
+## Enlaces
 
-### 1. Inicio y biblioteca
+- Web pública: https://jhooni467.github.io/Sonora-TV-/
+- Pantalla de conexión para la TV: https://jhooni467.github.io/Sonora-TV-/receiver.html
+- Aplicación Android: https://github.com/jhooni467/Sonora
+- Configuración compartida: [bridge-config.json](bridge-config.json)
 
-- Navegación de biblioteca y favoritos.
-- Añadir archivos de audio o enlaces directos.
-- Lista de canciones con acciones para marcar favoritos o eliminar.
-- Reproductor compacto fijo en la parte inferior.
-- Portadas para las canciones.
+## Cómo se emparejan los dispositivos
 
-### 2. Reproductor completo
+**La TV genera el código. El teléfono lo introduce.**
 
-Al seleccionar una canción se abre una vista independiente a pantalla completa:
+1. Abre SONORA TV en el navegador de la televisión.
+2. Pulsa **CONECTAR SONORA**.
+3. La TV solicita una sesión al servidor, muestra un código de seis dígitos y genera un QR con ese código.
+4. Abre Sonora Remote en Android y escribe el código que aparece en la TV. También puedes escanear el QR.
+5. Android y la TV consultan la misma dirección del servidor desde `bridge-config.json` y se conectan al Bridge por HTTPS/WSS.
+6. El estado cambia a conectado cuando se establece el canal WebSocket y la TV confirma su presencia.
 
-- Portada grande, nombre de canción y artista.
-- Controles de anterior, reproducir y siguiente.
-- Barra de progreso y volumen.
-- Aleatorio, favoritos y repetición.
-- Panel de letras y edición manual por canción.
-- Menú para volver a la biblioteca o solicitar pantalla completa.
+No hay que introducir una URL de servidor en el teléfono. La URL se configura una sola vez en `bridge-config.json`.
 
-La pantalla completa no reemplaza la biblioteca: se abre sobre ella y se puede cerrar para volver.
+## Desplegar SONORA Bridge (requisito para emparejar)
 
-## Funciones musicales
+GitHub Pages solo aloja los archivos web; no ejecuta el servidor Node.js ni WebSocket. El Bridge está preparado en `server/` y el despliegue se define en `render.yaml`.
 
-- Reproducir archivos de audio compatibles con el navegador.
-- Añadir enlaces directos HTTP/HTTPS a archivos de audio.
-- Añadir portada por URL a canciones añadidas mediante enlace.
-- Biblioteca persistente mediante IndexedDB cuando el navegador lo permite.
-- Favoritos, cola, reproducción aleatoria, repetición, volumen y barra de progreso.
-- Eliminar canciones de la biblioteca.
-- Navegación con flechas y teclas multimedia cuando el dispositivo las admite.
+1. Abre el [Blueprint de SONORA TV en Render](https://dashboard.render.com/blueprint/new?repo=https://github.com/jhooni467/Sonora-TV-).
+2. Inicia sesión en Render y conecta la cuenta de GitHub si lo solicita.
+3. Revisa el servicio `sonora-tv-bridge` y pulsa **Apply** para crear el servicio.
+4. Cuando el servicio esté desplegado, copia su URL HTTPS (por ejemplo, la URL que Render asigna a `sonora-tv-bridge`).
+5. Edita `bridge-config.json` en este repositorio y coloca esa URL en `bridgeUrl`, sin una barra final.
+6. Guarda el cambio. GitHub Pages publicará la nueva configuración; Android y la TV leerán el mismo archivo.
 
-Los enlaces a páginas de YouTube o Spotify no son enlaces directos de audio. Los formatos reproducibles dependen de los códecs compatibles con el navegador de la TV.
+Ejemplo de configuración:
 
-## Conectar Sonora Remote
+```json
+{
+  "version": 1,
+  "bridgeUrl": "https://TU-SERVICIO.onrender.com"
+}
+```
 
-El reproductor web se integra con [Sonora Remote](https://github.com/jhooni467/Sonora).
+**Estado actual:** `bridgeUrl` está vacío hasta que se cree el servicio de Render. Por tanto, la pantalla de conexión ya tiene el flujo correcto, pero no podrá generar un código real ni emparejar teléfonos hasta completar el despliegue y configurar esa URL.
 
-1. Abre Sonora Remote en el teléfono.
-2. Conecta el teléfono y la TV a la misma red Wi‑Fi.
-3. En Sonora Remote pulsa **Conectar**. Aparecen la dirección local del teléfono, un QR y un PIN de seis cifras.
-4. Abre en el navegador de la TV la dirección HTTP local que muestra el teléfono. El QR incluye el PIN y puede completar el emparejamiento automáticamente.
-5. Si no puedes usar el QR, abre la dirección sin el código y pulsa **CONECTAR CONTROL** en la página; introduce manualmente el PIN.
+## Qué hace el Bridge
 
-La versión Android TV nativa permite escribir la dirección IPv4 y el PIN en su pantalla de conexión. Después abre este mismo reproductor dentro de un WebView.
+- Crea sesiones de TV y códigos de seis cifras con caducidad de 15 minutos.
+- Valida el código que envía el teléfono y emite credenciales de sesión.
+- Mantiene un WebSocket autenticado para controles, estado y metadatos.
+- Notifica presencia y desconexiones de ambos dispositivos.
+- Permite recuperar la conexión usando el mismo token.
+- Recibe archivos completos y transmite audio por un flujo HTTP.
+- Incluye una prueba automatizada de emparejamiento, mensajes y reconexión.
 
-### Comunicación local
+Consulta [PROTOCOL.md](PROTOCOL.md) para el contrato de comunicación.
 
-- HTTP del teléfono: puerto **8765**. Sirve esta página y el audio elegido desde el teléfono.
-- WebSocket: puerto **8766**. Valida el PIN, recibe órdenes de reproducción y navegación y envía el estado de la canción al móvil.
-- Los dos dispositivos deben poder comunicarse dentro de la misma red local.
+## Reproductor web
 
-La página pública de GitHub Pages sigue siendo un reproductor independiente. Para emparejar Sonora Remote, utiliza la dirección HTTP local servida por el teléfono. Los navegadores bloquean el intento de una página HTTPS pública de abrir un WebSocket local no cifrado.
+- Biblioteca local y favoritos.
+- Archivos de audio y enlaces directos.
+- Portadas y una portada predeterminada.
+- Reproductor completo independiente de la biblioteca.
+- Controles grandes para pantalla de TV y navegación con mando.
+- Portada destacada, barra de progreso gruesa y panel de letras.
 
-La conexión local no está cifrada. Úsala solo en una red privada de confianza y no expongas los puertos locales a Internet. Mantén Sonora Remote activo mientras quieras recibir órdenes o reproducir un archivo que esté siendo servido desde el teléfono.
+Los formatos que se pueden reproducir dependen de los códecs del navegador del televisor. Los enlaces a páginas de YouTube o Spotify no son archivos de audio directos.
 
-## Publicar con GitHub Pages
+## GitHub Actions
 
-1. En el repositorio abre **Settings → Pages**.
-2. En **Build and deployment**, elige **Deploy from a branch**.
-3. Selecciona la rama **main** y la carpeta **/(root)**, y guarda.
-4. Abre la URL publicada en el navegador de tu televisor.
+El workflow **SONORA Bridge validation** comprueba la sintaxis del servidor y las páginas web, y ejecuta una prueba automática del código de TV, el emparejamiento Android simulado, el intercambio de mensajes y la reconexión.
 
-URL pública: https://jhooni467.github.io/Sonora-TV-/
+## Paleta
 
-## Paleta visual
-
-- Fondo: #090B10
-- Panel: #171C26
-- Texto: #F3F4F6
-- Texto secundario: #B9C0CC
-- Acento: #FFB86B
-
-## Compatibilidad
-
-El navegador del televisor debe admitir HTML5 Audio, JavaScript, WebSocket e IndexedDB. La selección de archivos desde USB depende del navegador integrado; cuando no esté disponible se pueden usar enlaces directos a archivos de audio accesibles desde la red.
-
-La versión web se distribuye desde `index.html`. El repositorio Android incluye una copia sincronizada en `remote/src/main/assets/sonora-tv/index.html`, que el servidor local del teléfono sirve a la aplicación TV. Cuando se modifica el reproductor, ambas copias deben mantenerse sincronizadas.
-
-Dentro de la aplicación Android TV, el WebView abre el selector de documentos de Android cuando se elige **Agregar música**. Los archivos de memorias USB aparecen si el sistema Android TV los expone mediante su proveedor de documentos.
+- Purplish Blue: #0B2558
+- Blue Oasis: #1C618B
+- Larkspur: #2D90A7
+- Blue Lemonade: #3FBFC0
+- Aventurine: #53F2B8
+- Spearmint Water: #D0FEFF
