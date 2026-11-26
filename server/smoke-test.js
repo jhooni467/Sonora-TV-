@@ -27,7 +27,30 @@ async function openSocket(url){return new Promise((resolve,reject)=>{const ws=ne
   await Promise.all([phoneNotice,tvNotice]);
   const metadataNotice=waitMessage(tv,m=>m.type==='metadata'&&m.title==='Connection test');phone.send(JSON.stringify({type:'metadata',title:'Connection test',artist:'SONORA'}));
   assert.equal((await metadataNotice).from,'phone');
+
+  const lyricsNotice=waitMessage(tv,m=>m.type==='lyrics'&&m.format==='lrc');
+  phone.send(JSON.stringify({type:'lyrics',format:'lrc',text:'Primera línea\\nSegunda línea',lines:[{startMs:1200,text:'Primera línea'},{startMs:2450,text:'Segunda línea'}]}));
+  const receivedLyrics=await lyricsNotice;
+  assert.equal(receivedLyrics.lines.length,2,'TV should receive timed LRC lines');
+  assert.equal(receivedLyrics.lines[1].startMs,2450,'LRC timestamps must be preserved');
+
+  const volumeNotice=waitMessage(tv,m=>m.type==='volume'&&m.value===0.35);
+  phone.send(JSON.stringify({type:'volume',value:0.35}));
+  await volumeNotice;
+
   const controlNotice=waitMessage(phone,m=>m.type==='play'&&m.from==='tv');tv.send(JSON.stringify({type:'play'}));await controlNotice;
+  const playbackNotice=waitMessage(phone,m=>m.type==='playback-state'&&m.title==='Bridge song');
+  tv.send(JSON.stringify({type:'playback-state',title:'Bridge song',artist:'SONORA',playing:true,positionMs:2500,durationMs:180000,volume:0.35}));
+  const playback=await playbackNotice;
+  assert.equal(playback.positionMs,2500,'TV playback position should reach Android');
+
+  const skipNotice=waitMessage(phone,m=>m.type==='next'&&m.from==='tv');
+  tv.send(JSON.stringify({type:'next'}));
+  await skipNotice;
+
+  const phoneCommandNotice=waitMessage(phone,m=>m.type==='phone-command'&&m.action==='next'&&m.from==='tv');
+  tv.send(JSON.stringify({type:'phone-command',action:'next'}));
+  await phoneCommandNotice;
   const tvDown=waitMessage(phone,m=>m.type==='peer-status'&&m.role==='tv'&&!m.connected);tv.close();await tvDown;
   tv=await openSocket('ws://127.0.0.1:'+port+'/ws?token='+encodeURIComponent(session.token));
   const phoneOnTv=waitMessage(tv,m=>m.type==='peer-status'&&m.role==='phone'&&m.connected);
@@ -39,7 +62,9 @@ async function openSocket(url){return new Promise((resolve,reject)=>{const ws=ne
   console.log('- Invalid code rejection');
   console.log('- Phone joins with TV code');
   console.log('- Two-way peer presence');
-  console.log('- Metadata and remote playback command relay');
+  console.log('- Metadata, volume and playback-state relay');
+  console.log('- Timed LRC lyrics relay');
+  console.log('- Previous/next and phone media-session command relay');
   console.log('- TV reconnect and phone disconnect notifications');
  }finally{try{phone?.close()}catch(_){}try{tv?.close()}catch(_){}child.kill('SIGTERM');await wait(250)}
 })().catch(error=>{console.error(error);process.exitCode=1});
