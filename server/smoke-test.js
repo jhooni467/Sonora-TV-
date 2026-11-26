@@ -62,6 +62,7 @@ async function openSocket(url){return new Promise((resolve,reject)=>{const ws=ne
   const mediaSaved=await mediaSavedNotice;
   const savedResponse=await fetch(base+mediaSaved.url);
   assert.equal(savedResponse.status,200,'Captured streamed audio should be downloadable for TV library import');
+  assert.match(savedResponse.headers.get('content-disposition')||'',/filename\*=UTF-8''Qu%C3%A9%20M%C3%A1s%20Pues%3F/,'Accented media names must be encoded safely in HTTP download headers');
   assert.equal(Buffer.from(await savedResponse.arrayBuffer()).toString(),sampleAudio.toString(),'Captured stream bytes should match original upload');
   const streamPlayback=await fetch(base+streamMessage.url);
   assert.equal(streamPlayback.status,200,'TV stream endpoint should serve the live audio');
