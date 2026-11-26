@@ -29,10 +29,28 @@ async function openSocket(url){return new Promise((resolve,reject)=>{const ws=ne
   assert.equal((await metadataNotice).from,'phone');
 
   const lyricsNotice=waitMessage(tv,m=>m.type==='lyrics'&&m.format==='lrc');
-  phone.send(JSON.stringify({type:'lyrics',format:'lrc',text:'Primera línea\\nSegunda línea',lines:[{startMs:1200,text:'Primera línea'},{startMs:2450,text:'Segunda línea'}]}));
+  phone.send(JSON.stringify({type:'lyrics',format:'lrc',text:'Primera línea\\nSegunda línea',lines:[{startMs:1200,text:'Primera línea',words:[{startMs:1200,text:'Primera '},{startMs:1600,text:'línea'}]},{startMs:2450,text:'Segunda línea'}]}));
   const receivedLyrics=await lyricsNotice;
   assert.equal(receivedLyrics.lines.length,2,'TV should receive timed LRC lines');
   assert.equal(receivedLyrics.lines[1].startMs,2450,'LRC timestamps must be preserved');
+  assert.equal(receivedLyrics.lines[0].words[1].startMs,1600,'Enhanced LRC word timestamps must be preserved');
+
+  const streamNotice=waitMessage(tv,m=>m.type==='stream-start'&&m.name==='Qué Más Pues?'&&m.artist==='J Balvin');
+  const streamResponse=await fetch(base+'/api/stream/session',{
+   method:'POST',
+   headers:{
+    'authorization':'Bearer '+paired.token,
+    'content-type':'audio/mpeg',
+    'x-track-title-b64':Buffer.from('Qué Más Pues?','utf8').toString('base64'),
+    'x-track-artist-b64':Buffer.from('J Balvin','utf8').toString('base64')
+   },
+   body:'{}'
+  });
+  assert.equal(streamResponse.status,201,'Unicode track title must not break stream-session request');
+  await streamResponse.json();
+  const streamMessage=await streamNotice;
+  assert.equal(streamMessage.name,'Qué Más Pues?','Bridge must decode the UTF-8 title header');
+  assert.equal(streamMessage.artist,'J Balvin','Bridge must decode the UTF-8 artist header');
 
   const volumeNotice=waitMessage(tv,m=>m.type==='volume'&&m.value===0.35);
   phone.send(JSON.stringify({type:'volume',value:0.35}));
@@ -63,7 +81,8 @@ async function openSocket(url){return new Promise((resolve,reject)=>{const ws=ne
   console.log('- Phone joins with TV code');
   console.log('- Two-way peer presence');
   console.log('- Metadata, volume and playback-state relay');
-  console.log('- Timed LRC lyrics relay');
+  console.log('- Timed LRC and Enhanced LRC word timestamps relay');
+  console.log('- UTF-8 accented track title and artist headers');
   console.log('- Previous/next and phone media-session command relay');
   console.log('- TV reconnect and phone disconnect notifications');
  }finally{try{phone?.close()}catch(_){}try{tv?.close()}catch(_){}child.kill('SIGTERM');await wait(250)}
