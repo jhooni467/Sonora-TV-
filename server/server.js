@@ -39,10 +39,10 @@ if(req.method==='POST'&&url.pathname==='/api/upload'){const a=auth(req,url);if(!
 if(req.method==='GET'&&url.pathname.startsWith('/api/media/')){
  const a=auth(req,url),id=url.pathname.split('/').pop(),item=uploads.get(id);
  if(!a||!item||a.room.id!==item.roomId)return json(res,404,{error:'Archivo no disponible'});
- const downloadName=String(item.name||'audio').replace(/[\\r\\n]/g,'').slice(0,120);
- const asciiName=downloadName.replace(/[^\\x20-\\x7E]/g,'_').replace(/["\\\\]/g,'_')||'audio';
+ const downloadName=String(item.name||'audio').replace(/[\r\n]/g,'').slice(0,120);
+ const asciiName=downloadName.replace(/[^\x20-\x7E]/g,'_').replace(/["\\]/g,'_')||'audio';
  const utf8Name=encodeURIComponent(downloadName).replace(/[!'()*]/g,char=>'%'+char.charCodeAt(0).toString(16).toUpperCase());
- res.writeHead(200,{'content-type':item.mime,'content-length':fs.statSync(item.file).size,'content-disposition':"inline; filename=\\""+asciiName+"\\"; filename*=UTF-8''"+utf8Name,'access-control-allow-origin':'*'});
+ res.writeHead(200,{'content-type':item.mime,'content-length':fs.statSync(item.file).size,'content-disposition':"inline; filename=\""+asciiName+"\"; filename*=UTF-8''"+utf8Name,'access-control-allow-origin':'*'});
  return fs.createReadStream(item.file).pipe(res);
 }
 if(req.method==='POST'&&url.pathname==='/api/stream/session'){
