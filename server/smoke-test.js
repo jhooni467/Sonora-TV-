@@ -91,6 +91,15 @@ async function openSocket(url) {
     tvSocket.send(JSON.stringify({ type: 'play' }));
     await controlPromise;
 
+    const tvDisconnected = waitForMessage(phoneSocket, m => m.type === 'peer-status' && m.role === 'tv' && !m.connected);
+    tvSocket.close();
+    await tvDisconnected;
+
+    tvSocket = await openSocket('ws://127.0.0.1:' + port + '/ws?token=' + encodeURIComponent(session.token));
+    const phonePresenceOnTv = waitForMessage(tvSocket, m => m.type === 'peer-status' && m.role === 'phone' && m.connected);
+    const tvPresenceOnPhone = waitForMessage(phoneSocket, m => m.type === 'peer-status' && m.role === 'tv' && m.connected);
+    await Promise.all([phonePresenceOnTv, tvPresenceOnPhone]);
+
     const phoneDisconnected = waitForMessage(tvSocket, m => m.type === 'peer-status' && m.role === 'phone' && !m.connected);
     phoneSocket.close();
     await phoneDisconnected;
@@ -98,9 +107,10 @@ async function openSocket(url) {
     console.log('SONORA Bridge connectivity smoke test: PASS');
     console.log('- TV session and six-digit code');
     console.log('- Invalid code rejection');
-    console.log('- Phone pairing and TV/phone presence notifications');
+    console.log('- Phone pairing and two-way presence notifications');
     console.log('- Phone metadata relay to TV');
     console.log('- TV control relay to phone');
+    console.log('- TV disconnect and reconnect without re-pairing');
     console.log('- Phone disconnect notification');
   } finally {
     try { phoneSocket?.close(); } catch {}
