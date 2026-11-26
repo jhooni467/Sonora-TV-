@@ -81,3 +81,5 @@ URL pública: https://jhooni467.github.io/Sonora-TV-/
 El navegador del televisor debe admitir HTML5 Audio, JavaScript, WebSocket e IndexedDB. La selección de archivos desde USB depende del navegador integrado; cuando no esté disponible se pueden usar enlaces directos a archivos de audio accesibles desde la red.
 
 La versión web se distribuye desde `index.html`. El repositorio Android incluye una copia sincronizada en `remote/src/main/assets/sonora-tv/index.html`, que el servidor local del teléfono sirve a la aplicación TV. Cuando se modifica el reproductor, ambas copias deben mantenerse sincronizadas.
+
+Dentro de la aplicación Android TV, el WebView abre el selector de documentos de Android cuando se elige **Agregar música**. Los archivos de memorias USB aparecen si el sistema Android TV los expone mediante su proveedor de documentos.
