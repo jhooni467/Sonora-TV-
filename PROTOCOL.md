@@ -14,7 +14,8 @@
 - Codes expire after 15 minutes. A new TV session creates a new code.
 
 ## Messages
-Supported types: play, pause, toggle, next, previous, seek, volume, metadata, lyrics, queue, stop, ping, paired, peer-status, media-ready and stream-start.
+Supported types: play, pause, toggle, next, previous, seek, volume, metadata, lyrics, queue, stop, ping, preferences, paired, peer-status, media-ready and stream-start.
+- preferences: selected theme and lyricsAnimation from the paired Android phone. The TV applies these only while the phone is connected and returns to its default appearance when the phone disconnects.
 - metadata: title, artist, album, durationMs, artworkDataUrl or artworkUrl
 - lyrics: text and optional timed lines [{startMs,text}]
 - seek: positionMs
@@ -39,3 +40,10 @@ Supported types: play, pause, toggle, next, previous, seek, volume, metadata, ly
 
 ## Security
 Use HTTPS/WSS. Never share room tokens. This bridge relays audio through the server; it is not end-to-end encrypted. Device/browser codec support controls which audio formats can play.
+
+
+## Personalization
+- Android saves the selected theme and lyric animation locally.
+- While paired, Android sends a `preferences` message with `theme` and `lyricsAnimation` to the TV.
+- The TV restores its default theme and the default lyric animation when the phone disconnects. Reconnection reapplies the saved Android preferences.
+- The TV library is stored in the browser's IndexedDB on that TV/browser. Imported audio files remain in the library after leaving the connection screen; temporary live streams are not stored as permanent tracks.
