@@ -47,10 +47,14 @@ svg{display:block;pointer-events:none}
 .progress-wrap{width:88%;display:grid;grid-template-columns:42px minmax(0,1fr) 42px;gap:12px;align-items:center;color:#71889A;font-size:clamp(10px,.72vw,13px);font-variant-numeric:tabular-nums;font-weight:700}
 input[type=range]{width:100%;margin:0;accent-color:var(--larkspur);cursor:pointer}
 #seekBar{height:7px}
-.left-tools{display:flex;align-items:center;justify-content:center;gap:clamp(26px,3vw,48px);margin-top:0}
+.left-tools{display:flex;align-items:center;justify-content:center;gap:clamp(15px,2.2vw,34px);margin-top:0}
 .small-tool{display:grid;place-items:center;width:48px;height:48px;border-radius:50%;background:transparent;color:#68869C}
 .small-tool:hover,.small-tool.on{background:#E9FAF8;color:var(--blue)}
 .small-tool svg{width:25px;height:25px}
+.volume-control{display:flex;align-items:center;gap:9px;margin-left:clamp(8px,1vw,16px);color:#68869C}
+.volume-control svg{width:25px;height:25px;flex:none}
+.volume-control input{width:clamp(68px,6vw,100px);height:7px}
+
 .right-pane{position:relative;min-width:0;min-height:0;display:flex;align-items:center;justify-content:center;padding:clamp(50px,7vh,90px) clamp(30px,5vw,88px);background:linear-gradient(145deg,#fff 0%,#fbffff 100%)}
 .lyrics-area{width:100%;height:100%;max-width:900px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative}
 .lyrics-heading{position:absolute;top:clamp(8px,2vh,24px);left:0;right:0;display:flex;align-items:center;justify-content:center;gap:12px;color:#7B9AAA;font-size:clamp(11px,.8vw,14px);font-weight:900;letter-spacing:.2em}
@@ -81,7 +85,7 @@ input[type=range]{width:100%;margin:0;accent-color:var(--larkspur);cursor:pointe
 .track-count{margin-left:auto;color:#7E9AAA;font-size:12px}
 .track-list{display:flex;flex-direction:column;gap:7px;min-height:0;overflow:auto;padding:3px 3px 10px;scrollbar-width:thin;scrollbar-color:var(--lemonade) transparent}
 .queue-empty{padding:28px 12px;text-align:center;color:#849EAC;font-size:13px;line-height:1.6}
-.track-row{width:100%;min-height:66px;display:grid;grid-template-columns:48px minmax(0,1fr) 34px 34px;align-items:center;gap:10px;padding:8px;border:1px solid transparent;border-radius:13px;background:#F3FAFA;text-align:left}
+.track-row{width:100%;min-height:66px;display:grid;grid-template-columns:48px minmax(0,1fr) 46px 36px 36px;align-items:center;gap:10px;padding:8px;border:1px solid transparent;border-radius:13px;background:#F3FAFA;text-align:left;cursor:pointer}
 .track-row:hover,.track-row.current{background:#E1F8F3;border-color:rgba(45,144,167,.2)}
 .track-art{width:48px;height:48px;border-radius:11px;overflow:hidden;background:var(--navy)}
 .track-art img{width:100%;height:100%;object-fit:cover}
@@ -90,9 +94,10 @@ input[type=range]{width:100%;margin:0;accent-color:var(--larkspur);cursor:pointe
 .track-meta strong{font-size:13px;color:var(--navy);margin-bottom:4px}
 .track-meta span{font-size:11px;color:#7892A1}
 .track-length{font-size:11px;color:#7892A1;text-align:right;font-variant-numeric:tabular-nums}
-.track-icon{width:32px;height:32px;display:grid;place-items:center;border-radius:50%;color:var(--blue);background:transparent}
+.track-icon{width:34px;height:34px;display:grid;place-items:center;border:0;border-radius:50%;color:var(--blue);background:transparent;cursor:pointer}
 .track-icon svg{width:19px;height:19px}
 .track-icon:hover,.track-icon.selected{background:#D4F7EA;color:var(--navy)}
+.track-icon:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
 .toast{position:fixed;z-index:50;left:50%;bottom:24px;transform:translate(-50%,14px);opacity:0;pointer-events:none;padding:13px 18px;border-radius:13px;background:var(--navy);color:#fff;font-size:13px;font-weight:750;box-shadow:0 10px 30px rgba(11,37,88,.2);transition:.2s}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 .modal-bg{position:fixed;z-index:40;inset:0;display:none;place-items:center;padding:24px;background:rgba(6,25,56,.62);backdrop-filter:blur(7px)}
@@ -189,6 +194,10 @@ input[type=range]{width:100%;margin:0;accent-color:var(--larkspur);cursor:pointe
         <button class="small-tool" id="repeatBtn" aria-label="Repetir canción" aria-pressed="false" title="Repetir">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m17 2 4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4m14-1v2a3 3 0 0 1-3 3H3"/></svg>
         </button>
+        <label class="volume-control" title="Volumen">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+          <input id="volumeBar" type="range" min="0" max="1" step="0.01" value="0.8" aria-label="Volumen">
+        </label>
       </div>
     </div>
   </section>
@@ -300,14 +309,15 @@ function render(){
   var empty=document.createElement('div');empty.className='queue-empty';empty.textContent=state.filter==='favorites'?'Todavía no tienes canciones favoritas.':'Tu biblioteca está vacía. Añade canciones para comenzar.';list.append(empty);
  }else{
   tracks.forEach(function(track){
-   var row=document.createElement('button');row.type='button';row.className='track-row'+(track.id===state.currentId?' current':'');row.setAttribute('aria-label','Reproducir '+(track.title||'canción'));
+   var row=document.createElement('div');row.className='track-row'+(track.id===state.currentId?' current':'');row.tabIndex=0;row.setAttribute('role','button');row.setAttribute('aria-label','Reproducir '+(track.title||'canción'));
    var art=document.createElement('span');art.className='track-art';var image=document.createElement('img');image.src=track.cover||DEFAULT_COVER;image.alt='';image.onerror=function(){image.src=DEFAULT_COVER;};art.append(image);
    var meta=document.createElement('span');meta.className='track-meta';var title=document.createElement('strong');title.textContent=track.title||'Canción sin título';var artist=document.createElement('span');artist.textContent=track.artist||(track.source==='file'?'Archivo local':'Audio web');meta.append(title,artist);
    var length=document.createElement('span');length.className='track-length';length.textContent=track.duration?time(track.duration):'';
-   var fav=document.createElement('span');fav.className='track-icon'+(track.favorite?' selected':'');fav.innerHTML=track.favorite?ICONS.heartOn:ICONS.heartOff;fav.setAttribute('aria-hidden','true');
-   var remove=document.createElement('span');remove.className='track-icon';remove.innerHTML=ICONS.remove;remove.setAttribute('aria-hidden','true');
+   var fav=document.createElement('button');fav.type='button';fav.className='track-icon'+(track.favorite?' selected':'');fav.innerHTML=track.favorite?ICONS.heartOn:ICONS.heartOff;fav.setAttribute('aria-label',track.favorite?'Quitar de favoritos':'Añadir a favoritos');fav.addEventListener('click',async function(e){e.stopPropagation();track.favorite=!track.favorite;try{await save(track);}catch(_){}render();});
+   var remove=document.createElement('button');remove.type='button';remove.className='track-icon';remove.innerHTML=ICONS.remove;remove.setAttribute('aria-label','Eliminar canción');remove.addEventListener('click',async function(e){e.stopPropagation();await removeTrack(track.id);});
    row.append(art,meta,length,fav,remove);
    row.addEventListener('click',function(){select(track.id,true);closeMenu();});
+   row.addEventListener('keydown',function(e){if(e.target===row&&(e.key==='Enter'||e.key===' ')){e.preventDefault();select(track.id,true);closeMenu();}});
    list.append(row);
   });
  }
