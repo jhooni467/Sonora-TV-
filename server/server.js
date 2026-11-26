@@ -41,6 +41,7 @@ wss.on('connection',ws=>{
  else{if(room.phone&&room.phone!==ws)room.phone.close(4001,'Phone session replaced');room.phone=ws}
  // Notify the other device, not the socket that just connected.
  emit(room,{type:'peer-status',role,connected:true,deviceName:room.phoneName||'SONORA'},role==='tv'?'phone':'tv');
+ if(role==='phone')emit(room,{type:'peer-status',role:'tv',connected:!!(room.tv&&room.tv.readyState===WebSocket.OPEN),deviceName:'SONORA TV'},'phone');
  ws.on('message',(data,binary)=>{
   const target=role==='tv'?room.phone:room.tv;
   if(binary){if(target&&target.readyState===WebSocket.OPEN&&data.length<=1048576)target.send(data,{binary:true});return}
