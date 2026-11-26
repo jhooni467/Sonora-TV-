@@ -14,7 +14,7 @@
 - Codes expire after 15 minutes. A new TV session creates a new code.
 
 ## Messages
-Supported types: play, pause, toggle, next, previous, seek, volume, metadata, lyrics, queue, stop, ping, preferences, paired, peer-status, media-ready and stream-start.
+Supported types: play, pause, toggle, next, previous, seek, volume, metadata, lyrics, queue, stop, ping, preferences, paired, peer-status, media-ready, media-saved and stream-start.
 - preferences: selected theme and lyricsAnimation from the paired Android phone. The TV applies these only while the phone is connected and returns to its default appearance when the phone disconnects.
 - metadata: title, artist, album, durationMs, artworkDataUrl or artworkUrl
 - lyrics: text and optional timed lines [{startMs,text}]
@@ -24,7 +24,7 @@ Supported types: play, pause, toggle, next, previous, seek, volume, metadata, ly
 
 ## Audio transport
 - Complete file: phone POSTs raw bytes to /api/upload with bearer token and X-File-Name. Bridge stores it and notifies the TV with media-ready. TV reads the file using its TV token.
-- Live stream: phone POSTs /api/stream/session with bearer token and X-Track-Title / X-Track-Artist. Bridge returns uploadUrl and playbackUrl and notifies TV with stream-start. Phone then PUTs audio to uploadUrl while TV GETs playbackUrl.
+- Live stream: phone POSTs /api/stream/session with bearer token and X-Track-Title / X-Track-Artist. Bridge returns uploadUrl and playbackUrl and notifies TV with stream-start. Phone then PUTs audio to uploadUrl while TV GETs playbackUrl. The bridge captures a temporary copy alongside the live stream and emits media-saved when the upload finishes, allowing TV to import the audio into its IndexedDB library without interrupting playback.
 - WebSocket binary frames can be relayed between paired clients (max 1 MiB per frame).
 
 ## Deployment
@@ -46,4 +46,4 @@ Use HTTPS/WSS. Never share room tokens. This bridge relays audio through the ser
 - Android saves the selected theme and lyric animation locally.
 - While paired, Android sends a `preferences` message with `theme` and `lyricsAnimation` to the TV.
 - The TV restores its default theme and the default lyric animation when the phone disconnects. Reconnection reapplies the saved Android preferences.
-- The TV library is stored in the browser's IndexedDB on that TV/browser. Imported audio files remain in the library after leaving the connection screen; temporary live streams are not stored as permanent tracks.
+- The TV library is stored in the browser's IndexedDB on that TV/browser. Complete-file uploads and completed live streams are imported into that library, so they remain after leaving the connection screen and reconnecting. The bridge's temporary upload copy can disappear when its service restarts; the TV's IndexedDB copy is the persistent library record.
