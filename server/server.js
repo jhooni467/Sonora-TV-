@@ -55,7 +55,7 @@ wss.on('connection',ws=>{
   const target=role==='tv'?room.phone:room.tv;
   if(binary){if(target&&target.readyState===WebSocket.OPEN&&data.length<=1048576)target.send(data,{binary:true});return}
   let msg;try{msg=JSON.parse(data.toString())}catch(_){return}
-  const allowed=new Set(['play','pause','toggle','next','previous','seek','volume','metadata','lyrics','queue','stop','ping','playback-state','phone-command']);
+  const allowed=new Set(['play','pause','toggle','next','previous','seek','volume','metadata','lyrics','queue','stop','ping','playback-state','phone-command','preferences']);
   if(!allowed.has(msg.type))return;
   if(role==='phone')emit(room,{...msg,from:'phone'});
   else if(['play','pause','toggle','next','previous','seek','volume','stop','ping','playback-state','phone-command'].includes(msg.type))emit(room,{...msg,from:'tv'},'phone');
