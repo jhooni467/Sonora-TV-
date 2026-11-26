@@ -37,8 +37,40 @@ if(req.method==='POST'&&url.pathname==='/api/pair/join'){
 }
 if(req.method==='POST'&&url.pathname==='/api/upload'){const a=auth(req,url);if(!a||a.role!=='phone')return json(res,401,{error:'No autorizado'});const r=a.room,id=crypto.randomUUID(),name=path.basename(headerUtf8(req,'x-file-name-b64','x-file-name','audio')).replace(/[^\p{L}\p{N}._ -]/gu,'_').slice(0,120),ext=path.extname(name).slice(0,10)||'.audio',file=path.join(UPLOAD_DIR,id+ext),out=fs.createWriteStream(file);let bytes=0;req.on('data',c=>bytes+=c.length);pipeline(req,out,err=>{if(err){fs.rm(file,{force:true},()=>{});if(!res.headersSent)json(res,500,{error:'No se pudo guardar el archivo'});return}uploads.set(id,{file,name,roomId:r.id,mime:req.headers['content-type']||'application/octet-stream',bytes});const mediaUrl='/api/media/'+id+'?token='+encodeURIComponent(r.tvToken);emit(r,{type:'media-ready',id,name,mime:req.headers['content-type']||'application/octet-stream',bytes,url:mediaUrl});json(res,201,{id,name,bytes,url:mediaUrl})});return}
 if(req.method==='GET'&&url.pathname.startsWith('/api/media/')){const a=auth(req,url),id=url.pathname.split('/').pop(),item=uploads.get(id);if(!a||!item||a.room.id!==item.roomId)return json(res,404,{error:'Archivo no disponible'});res.writeHead(200,{'content-type':item.mime,'content-length':fs.statSync(item.file).size,'content-disposition':'inline; filename="'+item.name.replace(/["\\]/g,'')+'"','access-control-allow-origin':'*'});return fs.createReadStream(item.file).pipe(res)}
-if(req.method==='POST'&&url.pathname==='/api/stream/session'){const a=auth(req,url);if(!a||a.role!=='phone')return json(res,401,{error:'No autorizado'});const r=a.room,id=crypto.randomUUID(),mime=String(req.headers['content-type']||'audio/mpeg'),stream=new PassThrough({highWaterMark:262144});streams.set(id,{roomId:r.id,stream,mime,startedAt:Date.now()});const playbackUrl='/api/stream/'+id+'?token='+encodeURIComponent(r.tvToken);emit(r,{type:'stream-start',id,mime,name:headerUtf8(req,'x-track-title-b64','x-track-title','Audio en directo').slice(0,160),artist:headerUtf8(req,'x-track-artist-b64','x-track-artist','').slice(0,160),url:playbackUrl});return json(res,201,{id,uploadUrl:'/api/stream/upload/'+id+'?token='+encodeURIComponent(a.room.phoneToken),playbackUrl})}
-if(req.method==='PUT'&&url.pathname.startsWith('/api/stream/upload/')){const a=auth(req,url),id=url.pathname.split('/').pop(),item=streams.get(id);if(!a||a.role!=='phone'||!item||a.room.id!==item.roomId)return json(res,404,{error:'Transmisión no disponible'});req.on('aborted',()=>item.stream.destroy());req.on('error',()=>item.stream.destroy());req.pipe(item.stream);req.on('end',()=>{item.stream.end();res.writeHead(204,{'access-control-allow-origin':'*'});res.end();setTimeout(()=>streams.delete(id),60000)});return}
+if(req.method==='POST'&&url.pathname==='/api/stream/session'){
+ const a=auth(req,url);if(!a||a.role!=='phone')return json(res,401,{error:'No autorizado'});
+ const r=a.room,id=crypto.randomUUID(),mime=String(req.headers['content-type']||'audio/mpeg');
+ const name=headerUtf8(req,'x-track-title-b64','x-track-title','Audio en directo').slice(0,160);
+ const artist=headerUtf8(req,'x-track-artist-b64','x-track-artist','').slice(0,160);
+ const safeName=path.basename(name).replace(/[^\p{L}\p{N}._ -]/gu,'_').slice(0,120)||'audio';
+ const ext=path.extname(safeName).slice(0,10)||'.audio',file=path.join(UPLOAD_DIR,id+ext);
+ const stream=new PassThrough({highWaterMark:262144});
+ streams.set(id,{roomId:r.id,stream,mime,startedAt:Date.now(),name,artist,file,bytes:0});
+ const playbackUrl='/api/stream/'+id+'?token='+encodeURIComponent(r.tvToken);
+ emit(r,{type:'stream-start',id,mime,name,artist,url:playbackUrl});
+ return json(res,201,{id,uploadUrl:'/api/stream/upload/'+id+'?token='+encodeURIComponent(a.room.phoneToken),playbackUrl});
+}
+if(req.method==='PUT'&&url.pathname.startsWith('/api/stream/upload/')){
+ const a=auth(req,url),id=url.pathname.split('/').pop(),item=streams.get(id);
+ if(!a||a.role!=='phone'||!item||a.room.id!==item.roomId)return json(res,404,{error:'Transmisión no disponible'});
+ const capture=fs.createWriteStream(item.file);let captureFailed=false;
+ capture.on('error',()=>{captureFailed=true;});
+ req.on('data',chunk=>{item.bytes+=chunk.length;});
+ req.on('aborted',()=>{item.stream.destroy();capture.destroy();fs.rm(item.file,{force:true},()=>{});});
+ req.on('error',()=>{item.stream.destroy();capture.destroy();fs.rm(item.file,{force:true},()=>{});});
+ req.pipe(item.stream);req.pipe(capture);
+ capture.on('finish',()=>{
+  item.stream.end();
+  if(!captureFailed){
+   uploads.set(id,{file:item.file,name:item.name,artist:item.artist,roomId:item.roomId,mime:item.mime,bytes:item.bytes});
+   const mediaUrl='/api/media/'+id+'?token='+encodeURIComponent(a.room.tvToken);
+   emit(a.room,{type:'media-saved',id,name:item.name,artist:item.artist,mime:item.mime,bytes:item.bytes,url:mediaUrl});
+  }
+  if(!res.headersSent){res.writeHead(204,{'access-control-allow-origin':'*'});res.end();}
+  setTimeout(()=>streams.delete(id),60000);
+ });
+ return;
+}
 if(req.method==='GET'&&url.pathname.startsWith('/api/stream/')){const a=auth(req,url),id=url.pathname.split('/').pop(),item=streams.get(id);if(!a||!item||a.room.id!==item.roomId)return json(res,404,{error:'Transmisión no disponible'});res.writeHead(200,{'content-type':item.mime,'cache-control':'no-store','access-control-allow-origin':'*','transfer-encoding':'chunked'});item.stream.pipe(res);return}
 return json(res,404,{error:'Ruta no encontrada'})
 }catch(e){console.error(e);return json(res,400,{error:'Solicitud incorrecta'})}});
