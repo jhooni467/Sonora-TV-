@@ -23,6 +23,8 @@ jobs:
         run: npm install
       - name: Check bridge syntax
         run: node --check server/server.js
+      - name: Check inline JavaScript syntax
+        run: node server/check-html.js
       - name: Check frontend files
         run: |
           test -s index.html
