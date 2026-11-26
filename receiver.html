@@ -37,8 +37,8 @@ function handle(m){
   if(!lyricLines.length&&lyricText){const parsed=parseLrc(lyricText);lyricLines=parsed.lines; if(parsed.text)lyricText=parsed.text;}
   renderLyricsAt(audio.currentTime*1000);notifyParentLyrics();
  }
- if(m.type==='media-ready'){audio.src=new URL(m.url,bridge).href;audio.play().catch(()=>status('Archivo recibido · pulsa reproducir',true));$('title').textContent=m.name||'Audio recibido';publishPlayback(true);}
- if(m.type==='stream-start'){audio.src=new URL(m.url,bridge).href;audio.play().catch(()=>status('Transmisión lista · pulsa reproducir',true));$('title').textContent=m.name||'Audio en directo';if(m.artist)$('artist').textContent=m.artist;publishPlayback(true);}
+ if(m.type==='media-ready'){parentPlaybackActive=false;audio.src=new URL(m.url,bridge).href;audio.play().catch(()=>status('Archivo recibido · pulsa reproducir',true));$('title').textContent=m.name||'Audio recibido';publishPlayback(true);}
+ if(m.type==='stream-start'){parentPlaybackActive=false;audio.src=new URL(m.url,bridge).href;audio.play().catch(()=>status('Transmisión lista · pulsa reproducir',true));$('title').textContent=m.name||'Audio en directo';if(m.artist)$('artist').textContent=m.artist;publishPlayback(true);}
  if(m.type==='play'||m.type==='pause'||m.type==='toggle'||m.type==='stop'){
   if(parentPlaybackActive){notifyParentCommand(m.type==='stop'?'pause':m.type);return;}
   if(m.type==='play')audio.play().catch(()=>{});
