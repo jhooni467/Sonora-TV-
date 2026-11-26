@@ -34,3 +34,8 @@ jobs:
           node -e "const c=require('./bridge-config.json'); if(c.version!==1 || !('bridgeUrl' in c)) process.exit(1)"
           grep -q "bridge-config.json" receiver.html
           grep -q "CONECTAR SONORA" index.html
+          grep -q "sonora-tv:close-receiver" index.html
+          grep -q "sonora-tv-control" receiver.html
+          grep -q "playback-state" receiver.html
+          grep -q "parseLrc" receiver.html
+          grep -q "phone-command" server/server.js
