@@ -553,7 +553,8 @@ window.addEventListener('message',event=>{
   $('fullElapsed').textContent=$('elapsed').textContent;$('fullDuration').textContent=$('duration').textContent;updateProgressVisual(progress);
   $('fullTitle').textContent=remoteTvPlayback.title||'SONORA TV';
   $('fullArtist').textContent=remoteTvPlayback.artist||'';
-  if(remoteTvPlayback.artworkDataUrl){$('fullCoverImage').src=remoteTvPlayback.artworkDataUrl}
+  $('fullCoverImage').src=remoteTvPlayback.artworkDataUrl||DEFAULT_COVER;
+  renderRemoteLyrics();
   return;
  }
  if(message.type==='sonora-tv:lyrics'){
