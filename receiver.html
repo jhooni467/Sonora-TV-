@@ -62,20 +62,20 @@ function handle(m){
 function parseLrc(source){
  const lines=[],plain=[];let offset=0;
  const toMs=m=>Math.max(0,(Number(m[1])*60+Number(m[2]))*1000+Number((m[3]||'0').padEnd(3,'0').slice(0,3))+offset);
- for(const raw of String(source||'').replace(/^\\uFEFF/,'').split(/\\r?\\n/)){
-  const off=raw.match(/^\\[offset:([+-]?\\d+)\\]/i);if(off){offset=Number(off[1])||0;continue;}
-  const matches=[...raw.matchAll(/\\[(\\d{1,2}):(\\d{2})(?:[.:](\\d{1,3}))?\\]/g)];
-  if(!matches.length){if(raw.trim()&&!/^\\[(ti|ar|al|by|re|ve|length):/i.test(raw))plain.push(raw.trim());continue;}
+ for(const raw of String(source||'').replace(/^\uFEFF/,'').split(/\r?\n/)){
+  const off=raw.match(/^\[offset:([+-]?\d+)\]/i);if(off){offset=Number(off[1])||0;continue;}
+  const matches=[...raw.matchAll(/\[(\d{1,2}):(\d{2})(?:[.:](\d{1,3}))?\]/g)];
+  if(!matches.length){if(raw.trim()&&!/^\[(ti|ar|al|by|re|ve|length):/i.test(raw))plain.push(raw.trim());continue;}
   const rawLyric=raw.slice(matches[matches.length-1].index+matches[matches.length-1][0].length).trim();if(!rawLyric)continue;
-  const wordMatches=[...rawLyric.matchAll(/<(\\d{1,2}):(\\d{2})(?:[.:](\\d{1,3}))?>/g)],words=[];let lyric=rawLyric;
+  const wordMatches=[...rawLyric.matchAll(/<(\d{1,2}):(\d{2})(?:[.:](\d{1,3}))?>/g)],words=[];let lyric=rawLyric;
   if(wordMatches.length){
    lyric='';
    wordMatches.forEach((wm,index)=>{const from=wm.index+wm[0].length,to=wordMatches[index+1]?.index??rawLyric.length,wordText=rawLyric.slice(from,to);if(wordText){lyric+=wordText;words.push({startMs:toMs(wm),text:wordText});}});
-   if(!lyric)lyric=rawLyric.replace(/<\\d{1,2}:\\d{2}(?:[.:]\\d{1,3})?>/g,'');
+   if(!lyric)lyric=rawLyric.replace(/<\d{1,2}:\d{2}(?:[.:]\d{1,3})?>/g,'');
   }
   plain.push(lyric);for(const m of matches)lines.push({startMs:toMs(m),text:lyric,words});
  }
- lines.sort((a,b)=>a.startMs-b.startMs);return {lines,text:plain.join('\\n')};
+ lines.sort((a,b)=>a.startMs-b.startMs);return {lines,text:plain.join('\n')};
 }
 function renderLyricsAt(positionMs){
  const box=$('lyrics');
