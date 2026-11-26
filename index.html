@@ -599,7 +599,7 @@ async function runRemoteCommand(data){
     }
     case 'load_url':{
       const url=String(data.url||'');
-      if(!/^https?:\\/\\//i.test(url)){toast('El enlace recibido no es válido.');break}
+      if(!/^https?:\/\//i.test(url)){toast('El enlace recibido no es válido.');break}
       await addUrl(url,String(data.title||'Audio del teléfono'),String(data.artist||'Archivo local'),String(data.cover||''));
       const track=state.tracks.find(t=>t.url===url);
       if(track)await select(track.id,true);
