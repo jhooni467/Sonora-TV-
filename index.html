@@ -467,12 +467,12 @@ input[type=range]{accent-color:#FFB86B}
 (()=>{'use strict';
 const $=id=>document.getElementById(id),audio=$('audio');
 const DB='sonora-tv-library',STORE='tracks';
-let remoteReceiverActive=false,remoteLyricsText='',remoteLyricsLines=[],remoteTvPlayback={title:'',artist:'',album:'',playing:false,positionMs:0,durationMs:0,volume:1,artworkDataUrl:''};
+let remoteReceiverActive=false,libraryPlaybackActive=false,remoteLyricsText='',remoteLyricsLines=[],remoteTvPlayback={title:'',artist:'',album:'',playing:false,positionMs:0,durationMs:0,volume:1,artworkDataUrl:''};
 function receiverControl(action,value){const frame=document.getElementById('receiverFrame');if(!frame||!frame.contentWindow)return false;frame.contentWindow.postMessage({type:'sonora-tv-control',action,value},location.origin);return true;}
 function publishLibraryPlayback(){
  const track=current();if(!track||!audio.src||receiverFrame.dataset.loaded!=='true'||!receiverFrame.contentWindow)return;
  const message={type:'sonora-tv:local-playback-state',hasMedia:true,title:track.title||'Canción sin título',artist:track.artist||'Artista desconocido',album:track.album||'',playing:!audio.paused,positionMs:Math.round((audio.currentTime||0)*1000),durationMs:Number.isFinite(audio.duration)?Math.round(audio.duration*1000):Math.round((track.duration||0)*1000),volume:audio.volume,artworkDataUrl:track.cover||''};
- remoteReceiverActive=true;remoteTvPlayback={...remoteTvPlayback,...message};receiverFrame.contentWindow.postMessage(message,location.origin);
+ libraryPlaybackActive=true;remoteReceiverActive=true;remoteTvPlayback={...remoteTvPlayback,...message};receiverFrame.contentWindow.postMessage(message,location.origin);
 }
 function openReceiver(){if(receiverFrame.dataset.loaded!=='true'){receiverFrame.src='receiver.html';receiverFrame.dataset.loaded='true'}receiverOverlay.classList.add('open');receiverOverlay.setAttribute('aria-hidden','false');}
 function renderRemoteLyrics(){
@@ -510,7 +510,7 @@ async function addFiles(files){const valid=Array.from(files||[]).filter(f=>f.typ
 function safeTitle(url){try{return decodeURIComponent(new URL(url).pathname.split('/').pop()||'Audio web').replace(/\.[^.]+$/,'')||'Audio web'}catch(_){return'Audio web'}}
 async function addUrl(url,title,artist,cover){const track={id:id(),title:title.trim()||safeTitle(url),artist:artist.trim()||'Audio web',source:'url',url,cover:cover||'',lyrics:'',favorite:false,addedAt:Date.now()};try{await save(track)}catch(_){toast('El enlace solo estará disponible mientras esta página permanezca abierta.')}state.tracks.push(track);render();if(!state.currentId)await select(track.id,true);toast('Enlace añadido a tu biblioteca.')}
 async function removeTrack(trackId){const index=state.tracks.findIndex(t=>t.id===trackId);if(index<0)return;const wasCurrent=state.currentId===trackId;state.tracks.splice(index,1);try{await dbAction('readwrite','delete',trackId)}catch(_){}if(wasCurrent){audio.pause();if(state.objectUrl){URL.revokeObjectURL(state.objectUrl);state.objectUrl=null}audio.removeAttribute('src');state.currentId=null;const replacement=state.tracks[index]||state.tracks[index-1];if(replacement)await select(replacement.id,false)}render();toast('Canción quitada de la biblioteca.')}
-async function togglePlay(){if(remoteReceiverActive&&!state.currentId){receiverControl('toggle');return}if(!state.currentId){const first=visible()[0]||state.tracks[0];if(first)return select(first.id,true);toast('Primero agrega una canción.');return}if(audio.paused){try{await audio.play()}catch(_){toast('El navegador bloqueó la reproducción. Presiona reproducir otra vez.')}}else audio.pause();render()}
+async function togglePlay(){if(remoteReceiverActive&&!libraryPlaybackActive){receiverControl('toggle');return}if(!state.currentId){const first=visible()[0]||state.tracks[0];if(first)return select(first.id,true);toast('Primero agrega una canción.');return}if(audio.paused){try{await audio.play()}catch(_){toast('El navegador bloqueó la reproducción. Presiona reproducir otra vez.')}}else audio.pause();render()}
 function next(manual=true){if(remoteReceiverActive&&!state.currentId){receiverControl('next');return}const list=visible().length?visible():state.tracks;if(!list.length)return;const index=list.findIndex(t=>t.id===state.currentId);if(!manual&&!state.repeat&&index===list.length-1){audio.pause();audio.currentTime=0;render();return}let nextIndex;if(state.shuffle&&list.length>1){do{nextIndex=Math.floor(Math.random()*list.length)}while(nextIndex===index)}else nextIndex=(index+1+list.length)%list.length;select(list[nextIndex].id,true)}
 function previous(){if(remoteReceiverActive&&!state.currentId){receiverControl('previous');return}if(audio.currentTime>3){audio.currentTime=0;return}const list=visible().length?visible():state.tracks;if(!list.length)return;const index=list.findIndex(t=>t.id===state.currentId);select(list[(index-1+list.length)%list.length].id,true)}
 
@@ -543,7 +543,7 @@ window.addEventListener('message',event=>{
   return;
  }
  if(message.type==='sonora-tv:playback-state'){
-  remoteReceiverActive=!!message.hasMedia;
+  remoteReceiverActive=!!message.hasMedia;libraryPlaybackActive=false;
   remoteTvPlayback={...remoteTvPlayback,...message};
   if(!remoteReceiverActive)return;
   $('nowTitle').textContent=remoteTvPlayback.title||'Nada está sonando';
@@ -569,7 +569,7 @@ window.addEventListener('message',event=>{
  }
  if(message.type==='sonora-tv:remote-command'){
   const action=message.action,value=message.value,track=current();
-  if(track&&audio.src){
+  if(track&&audio.src&&libraryPlaybackActive){
    if(action==='play')audio.play().catch(()=>{});else if(action==='pause')audio.pause();else if(action==='toggle')togglePlay();else if(action==='next')next(true);else if(action==='previous')previous();else if(action==='volume')audio.volume=Math.max(0,Math.min(1,Number(value)||0));else if(action==='seek'&&Number.isFinite(audio.duration))audio.currentTime=Math.max(0,Math.min(audio.duration,Number(value)/1000));
    publishLibraryPlayback();
   }else receiverControl(action,value);
