@@ -23,6 +23,9 @@ jobs:
         run: npm install
       - name: Check bridge syntax
         run: node --check server/server.js
+      - name: Test pairing and WebSocket connectivity
+        working-directory: server
+        run: node smoke-test.js
       - name: Check inline JavaScript syntax
         run: node server/check-html.js
       - name: Check frontend files
