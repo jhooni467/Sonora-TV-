@@ -7,18 +7,19 @@ const json=(res,status,value)=>{res.writeHead(status,{'content-type':'applicatio
 const readJson=req=>new Promise((resolve,reject)=>{let d='';req.on('data',c=>{d+=c;if(d.length>65536)req.destroy()});req.on('end',()=>{try{resolve(JSON.parse(d||'{}'))}catch(e){reject(e)}});req.on('error',reject)});
 function headerUtf8(req,encodedName,legacyName,fallback=''){
  const encoded=req.headers[encodedName];
- if(typeof encoded==='string'&&encoded){
+ if(typeof encoded==='string'&&/^[A-Za-z0-9+/]*={0,2}$/.test(encoded)){
   try{return Buffer.from(encoded,'base64').toString('utf8')}catch(_){}
  }
  const legacy=req.headers[legacyName];
- return typeof legacy==='string'&&legacy?legacy:fallback;
+ // Legacy HTTP headers are restricted to printable ASCII; Unicode titles must use the Base64 header.
+ return typeof legacy==='string'&&/^[\\x20-\\x7E]*$/.test(legacy)?legacy:fallback;
 }
 const makeCode=()=>String(crypto.randomInt(0,1000000)).padStart(6,'0');
 function createRoom(){let code;do{code=makeCode()}while([...rooms.values()].some(r=>r.code===code));const room={id:crypto.randomUUID(),code,tvToken:crypto.randomBytes(32).toString('hex'),phoneToken:null,phoneName:null,tv:null,phone:null,createdAt:Date.now()};rooms.set(room.id,room);tokens.set(room.tvToken,{room,role:'tv'});return room}
 function send(ws,p){if(ws&&ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify(p))}
 function emit(room,p,to='tv'){send(to==='tv'?room.tv:room.phone,p)}
 function auth(req,url){const token=url.searchParams.get('token')||(req.headers.authorization||'').replace(/^Bearer\s+/i,'');return tokens.get(token)||null}
-const server=http.createServer(async(req,res)=>{const url=new URL(req.url,'http://localhost');if(req.method==='OPTIONS'){res.writeHead(204,{'access-control-allow-origin':'*','access-control-allow-methods':'GET,POST,PUT,OPTIONS','access-control-allow-headers':'content-type,authorization,x-file-name,x-track-title,x-track-artist'});return res.end()}
+const server=http.createServer(async(req,res)=>{const url=new URL(req.url,'http://localhost');if(req.method==='OPTIONS'){res.writeHead(204,{'access-control-allow-origin':'*','access-control-allow-methods':'GET,POST,PUT,OPTIONS','access-control-allow-headers':'content-type,authorization,x-file-name,x-file-name-b64,x-track-title,x-track-title-b64,x-track-artist,x-track-artist-b64'});return res.end()}
 try{
 if(req.method==='GET'&&url.pathname==='/health')return json(res,200,{ok:true,service:'sonora-tv-bridge',version:1});
 if(req.method==='POST'&&url.pathname==='/api/tv/session'){const r=createRoom();return json(res,201,{roomId:r.id,code:r.code,token:r.tvToken,expiresIn:900,joinUrl:PUBLIC_ORIGIN?PUBLIC_ORIGIN+'/?pair='+r.code:null})}
