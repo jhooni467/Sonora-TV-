@@ -347,10 +347,10 @@ input[type=range]{accent-color:#FFB86B}
         <p>Todo lo que quieres escuchar, en un solo lugar.</p>
       </div>
       <div class="top-meta">
-        <button class="tv-tag remote-connect-btn" id="remoteConnectBtn" type="button" aria-label="Conectar Sonora Remote">
-          <span class="tv-dot" id="remoteStatusDot"></span><span id="remoteStatusLabel">CONECTAR CONTROL</span>
-        </button>
-        <span class="tv-tag phone-media-tag" id="remotePhoneLine">TELÉFONO SIN CONECTAR</span>
+        <a class="tv-tag remote-connect-btn" id="remoteConnectBtn" href="receiver.html" aria-label="Conectar SONORA desde el teléfono" style="text-decoration:none;min-height:48px">
+          <span class="tv-dot"></span><span>CONECTAR SONORA</span>
+        </a>
+        <span class="tv-tag">CÓDIGO EN ESTA TV</span>
       </div>
     </header>
     <section class="dashboard">
@@ -455,21 +455,6 @@ input[type=range]{accent-color:#FFB86B}
     </form>
   </div>
 </div>
-<div class="modal-bg" id="remoteModal" role="dialog" aria-modal="true" aria-labelledby="remoteModalTitle">
-  <div class="modal">
-    <h2 id="remoteModalTitle">Conectar Sonora Remote</h2>
-    <p>Abre esta página desde la dirección local que muestra Sonora Remote. Puedes usar el QR para rellenar el código automáticamente o escribir el PIN de seis cifras.</p>
-    <div class="field">
-      <label for="remotePin">PIN de emparejamiento</label>
-      <input id="remotePin" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="123456">
-    </div>
-    <p id="remoteHelp">El teléfono y el televisor deben estar conectados a la misma red Wi‑Fi.</p>
-    <div class="modal-actions">
-      <button type="button" class="secondary" id="remoteCloseBtn">Cerrar</button>
-      <button type="button" class="primary" id="remotePairBtn">Emparejar</button>
-    </div>
-  </div>
-</div>
 <script>
 (()=>{'use strict';
 const $=id=>document.getElementById(id),audio=$('audio');
@@ -562,137 +547,6 @@ document.addEventListener('keydown',e=>{
   }
 });
 
-
-const remoteLink={socket:null,paired:false,pin:''};
-function setRemoteStatus(label,connected){
-  $('remoteStatusLabel').textContent=label;
-  $('remoteConnectBtn').classList.toggle('connected',!!connected);
-  $('remoteStatusDot').style.background=connected?'#65D6A6':'#8D98AA';
-}
-function openRemoteModal(){
-  $('remoteModal').classList.add('open');
-  $('remoteHelp').textContent=location.protocol==='https:'
-    ?'La versión pública usa HTTPS y el navegador bloquea conexiones locales sin cifrar. Abre la dirección http:// que muestra Sonora Remote.'
-    :'Introduce el PIN que aparece en Sonora Remote.';
-  $('remotePin').focus();
-}
-function closeRemoteModal(){$('remoteModal').classList.remove('open')}
-function connectRemote(pin){
-  const code=String(pin||'').replace(/\\D/g,'').slice(0,6);
-  if(code.length!==6){$('remoteHelp').textContent='El PIN debe tener seis cifras.';return}
-  if(location.protocol!=='http:'){
-    $('remoteHelp').textContent='Abre Sonora TV con la dirección local http:// que muestra Sonora Remote; esta página pública HTTPS no puede abrir el canal local.';
-    return;
-  }
-  if(!location.hostname){$('remoteHelp').textContent='No se detectó la dirección local del teléfono.';return}
-  try{if(remoteLink.socket)remoteLink.socket.close()}catch(_){}
-  remoteLink.pin=code;
-  setRemoteStatus('CONECTANDO…',false);
-  $('remoteHelp').textContent='Conectando con el teléfono…';
-  const socket=new WebSocket('ws://'+location.hostname+':8766');
-  remoteLink.socket=socket;
-  socket.onopen=()=>socket.send(JSON.stringify({type:'pair',pin:code}));
-  socket.onmessage=async event=>{
-    let data;try{data=JSON.parse(event.data)}catch(_){return}
-    if(data.type==='paired'){
-      remoteLink.paired=true;closeRemoteModal();setRemoteStatus('CONTROL CONECTADO',true);
-      toast('Sonora Remote está conectado.');sendTvState();return;
-    }
-    if(data.type==='pair_error'){
-      remoteLink.paired=false;setRemoteStatus('PIN INCORRECTO',false);
-      $('remoteHelp').textContent=data.message||'Código incorrecto. Revisa el PIN.';
-      return;
-    }
-    if(data.type==='command'){await runRemoteCommand(data);return}
-    if(data.type==='phone_media'){
-      const title=data.title||'Sin música del teléfono';
-      const artist=data.artist||'';
-      $('remotePhoneLine').textContent=data.playing?'TELÉFONO · '+title+' — '+artist:'TELÉFONO · '+title;
-      $('remotePhoneLine').title=artist;
-    }
-  };
-  socket.onerror=()=>{
-    remoteLink.paired=false;setRemoteStatus('SIN CONEXIÓN',false);
-    $('remoteHelp').textContent='No se pudo abrir el enlace. Confirma que el teléfono y el TV estén en la misma Wi‑Fi y abre la dirección local.';
-  };
-  socket.onclose=()=>{
-    if(remoteLink.socket===socket){
-      remoteLink.paired=false;setRemoteStatus('CONECTAR CONTROL',false);
-      $('remotePhoneLine').textContent='TELÉFONO SIN CONECTAR';
-    }
-  };
-}
-async function runRemoteCommand(data){
-  switch(data.action){
-    case 'toggle':await togglePlay();break;
-    case 'play':if(audio.paused)await togglePlay();break;
-    case 'pause':if(!audio.paused)audio.pause();break;
-    case 'next':next(true);break;
-    case 'previous':previous();break;
-    case 'seek':
-      if(Number.isFinite(audio.duration))audio.currentTime=Math.max(0,Math.min(audio.duration,Number(data.position)||0));
-      break;
-    case 'set_volume':{
-      const value=Math.max(0,Math.min(1,Number(data.value)||0));
-      audio.volume=value;$('volumeBar').value=String(value);
-      try{localStorage.setItem('sonora-volume',String(value))}catch(_){}
-      break;
-    }
-    case 'load_url':{
-      const url=String(data.url||'');
-      if(!/^https?:\/\//i.test(url)){toast('El enlace recibido no es válido.');break}
-      await addUrl(url,String(data.title||'Audio del teléfono'),String(data.artist||'Archivo local'),String(data.cover||''));
-      const track=state.tracks.find(t=>t.url===url);
-      if(track)await select(track.id,true);
-      openFullPlayer();
-      break;
-    }
-    case 'open_library':closeFullPlayer();break;
-    case 'navigate':{
-      const direction=String(data.direction||'');
-      if(['up','down','left','right'].includes(direction))moveFocus(direction);
-      break;
-    }
-    case 'select':{
-      const active=document.activeElement;
-      if(active&&typeof active.click==='function')active.click();
-      break;
-    }
-  }
-  sendTvState();
-}
-function sendTvState(){
-  const socket=remoteLink.socket;
-  if(!remoteLink.paired||!socket||socket.readyState!==WebSocket.OPEN)return;
-  const track=current();
-  try{
-    socket.send(JSON.stringify({
-      type:'tv_state',
-      title:track?track.title:'Sin canción',
-      artist:track?(track.artist||'Artista no disponible'):'Biblioteca de Sonora TV',
-      playing:!audio.paused,
-      position:Number.isFinite(audio.currentTime)?audio.currentTime:0,
-      duration:Number.isFinite(audio.duration)?audio.duration:0,
-      volume:audio.volume
-    }));
-  }catch(_){}
-}
-$('remoteConnectBtn').addEventListener('click',openRemoteModal);
-$('remoteCloseBtn').addEventListener('click',closeRemoteModal);
-$('remoteModal').addEventListener('click',event=>{if(event.target===$('remoteModal'))closeRemoteModal()});
-$('remotePairBtn').addEventListener('click',()=>connectRemote($('remotePin').value));
-$('remotePin').addEventListener('keydown',event=>{if(event.key==='Enter')connectRemote($('remotePin').value)});
-const qrPin=new URLSearchParams(location.search).get('pin');
-if(qrPin&&/^\\d{6}$/.test(qrPin)){
-  $('remotePin').value=qrPin;
-  setTimeout(()=>connectRemote(qrPin),500);
-}else if(location.protocol==='https:'){
-  $('remoteHelp').textContent='Para conectar el control, abre la dirección local http:// que muestra Sonora Remote.';
-}
-audio.addEventListener('play',sendTvState);
-audio.addEventListener('pause',sendTvState);
-audio.addEventListener('timeupdate',sendTvState);
-audio.addEventListener('loadedmetadata',sendTvState);
 
 async function init(){try{state.db=await openDb();state.tracks=(await dbAction('readonly','all'))||[];state.tracks.sort((a,b)=>(a.addedAt||0)-(b.addedAt||0))}catch(_){toast('El navegador no permite guardar la biblioteca. Los enlaces pueden funcionar mientras esta página esté abierta.')}try{const volume=Number(localStorage.getItem('sonora-volume'));if(Number.isFinite(volume)&&volume>=0&&volume<=1)$('volumeBar').value=String(volume)}catch(_){}audio.volume=Number($('volumeBar').value);render();if(state.tracks[0])select(state.tracks[0].id,false)}
 init();
