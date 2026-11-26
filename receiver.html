@@ -28,7 +28,7 @@ function connectSocket(){
  ws.onmessage=e=>{if(typeof e.data!=='string')return;let m;try{m=JSON.parse(e.data)}catch(_){return}handle(m)};
 }
 function handle(m){
- if(m.type==='paired'){status('Teléfono vinculado: '+(m.deviceName||'SONORA'),true);$('connectionState').textContent='Teléfono conectado';phoneConnected=true;}
+ if(m.type==='paired'){status('Teléfono autorizado · verificando canal…',true);$('connectionState').textContent='Verificando conexión segura…';}
  if(m.type==='peer-status'&&m.role==='phone'){phoneConnected=!!m.connected;$('connectionState').textContent=phoneConnected?'Teléfono conectado':'Sin teléfono conectado';status(phoneConnected?'SONORA está conectada':'Esperando teléfono',true);}
  if(m.type==='metadata')setMeta(m);
  if(m.type==='lyrics')$('lyrics').textContent=m.text||'Sin letras disponibles';
