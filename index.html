@@ -334,7 +334,7 @@ function moveFocus(direction){
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&$('urlModal').classList.contains('open')){closeModal();return}
   const active=document.activeElement;
-  const typing=active&&(active.tagName==='INPUT'&&active.type!=='range'||active.tagName==='TEXTAREA');
+  const typing=active&&(active.tagName==='INPUT'&&(active.type!=='range'||e.key==='ArrowLeft'||e.key==='ArrowRight')||active.tagName==='TEXTAREA');
   if(e.key==='MediaPlayPause'){e.preventDefault();togglePlay();return}
   if(e.key==='MediaTrackNext'){e.preventDefault();next(true);return}
   if(e.key==='MediaTrackPrevious'){e.preventDefault();previous();return}
