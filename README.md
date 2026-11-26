@@ -1,12 +1,20 @@
 # SONORA TV
 
-Reproductor de música web creado **exclusivamente para televisores**. No necesita APK ni instalación: se abre desde el navegador integrado de la TV.
+Reproductor de música web creado exclusivamente para televisores. No necesita APK ni instalación: se abre desde el navegador de la TV.
 
-## Diseño
+## Pantalla del reproductor
 
-La interfaz está pensada para pantallas de televisión en formato horizontal, con tarjetas limpias y navegación desde el control remoto. La escala se ajusta a distintos tamaños y resoluciones de TV, desde pantallas HD hasta 4K.
+- Interfaz de pantalla completa en formato horizontal.
+- Portada grande a la izquierda, nombre de canción y artista debajo.
+- Controles de reproducción con iconografía SVG propia, sin emojis ni caracteres usados como iconos.
+- Diseño de portada predeterminado para canciones que no tengan imagen.
+- Zona de letras a la derecha; se puede escribir o pegar manualmente la letra de cada canción.
+- Texto de la interfaz no seleccionable.
+- Menú superior para biblioteca, favoritos, añadir archivos, añadir enlaces y activar pantalla completa.
+- Navegación con flechas, OK y teclas multimedia cuando el navegador/televisor las admite.
 
-Paleta de color:
+## Paleta oficial
+
 - Purplish Blue: #0B2558
 - Blue Oasis: #1C618B
 - Larkspur: #2D90A7
@@ -14,14 +22,14 @@ Paleta de color:
 - Aventurine: #53F2B8
 - Spearmint Water: #D0FEFF
 
-## Funciones
+## Funciones musicales
 
-- Reproducir canciones desde archivos de audio compatibles.
+- Reproducir archivos de audio compatibles.
 - Añadir enlaces directos HTTP/HTTPS a archivos de audio.
-- Guardar biblioteca y archivos en IndexedDB, cuando el navegador lo permite.
-- Favoritos, lista de reproducción, aleatorio y repetición.
-- Control de reproducción, volumen y posición de la canción.
-- Navegación por flechas, OK y teclas multimedia compatibles con el control remoto.
+- Añadir una portada opcional a canciones por enlace.
+- Biblioteca persistente mediante IndexedDB cuando el navegador lo permite.
+- Favoritos, reproducción aleatoria, repetición, volumen y barra de progreso.
+- Eliminar canciones de la biblioteca.
 
 ## Publicar con GitHub Pages
 
@@ -33,6 +41,6 @@ Paleta de color:
 
 ## Compatibilidad
 
-La TV necesita soporte para HTML5 Audio, JavaScript e IndexedDB. La selección de archivos desde USB depende del navegador del televisor; si no está disponible, se pueden usar enlaces directos a archivos de audio accesibles por internet o por la red local. Los enlaces a páginas de YouTube o Spotify no son enlaces directos de audio.
+El navegador del televisor debe admitir HTML5 Audio, JavaScript e IndexedDB. La selección de archivos desde USB depende del navegador integrado; cuando no esté disponible se pueden usar enlaces directos a archivos de audio accesibles desde la red. Los enlaces a páginas de YouTube o Spotify no son enlaces directos de audio.
 
-Los formatos reproducibles dependen de los códecs que incluya el navegador del televisor. Algunos navegadores bloquean la reproducción automática, por lo que puede ser necesario pulsar **Reproducir**.
+Los formatos reproducibles dependen de los códecs compatibles con el navegador del televisor. Algunos navegadores bloquean la reproducción automática, por lo que puede ser necesario pulsar **Reproducir**.
