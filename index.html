@@ -519,7 +519,7 @@ async function importRemoteMedia(message){
  if(!message||!message.blob||typeof message.blob.slice!=='function')return;
  const remoteMediaId=String(message.remoteMediaId||'');if(remoteMediaId&&state.tracks.some(track=>track.remoteMediaId===remoteMediaId)){render();return;}
  const blob=message.blob,track={id:id(),title:String(message.title||'Audio recibido'),artist:String(message.artist||'Teléfono'),album:String(message.album||''),source:'file',blob,type:String(message.mime||blob.type||'audio/mpeg'),size:Number(blob.size)||0,duration:Math.max(0,Number(message.durationMs)||0)/1000,cover:String(message.cover||''),favorite:false,addedAt:Date.now(),remoteMediaId};
- state.tracks.push(track);try{await save(track);}catch(_){toast('La canción llegó, pero no pudo guardarse en el almacenamiento de la TV.');}saveLibrarySession();render();toast('Canción añadida a tu biblioteca');
+ state.tracks.push(track);state.filter='all';try{await save(track);}catch(_){toast('La canción llegó, pero no pudo guardarse en el almacenamiento de la TV.');}saveLibrarySession();render();toast('Canción añadida a tu biblioteca');
 }
 function publishLibraryPlayback(){
  const track=current();if(!track||!audio.src||receiverFrame.dataset.loaded!=='true'||!receiverFrame.contentWindow)return;
