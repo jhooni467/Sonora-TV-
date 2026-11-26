@@ -1,0 +1,45 @@
+'use strict';
+const assert=require('node:assert/strict');
+const {spawn}=require('node:child_process');
+const net=require('node:net');
+const path=require('node:path');
+const {WebSocket}=require('ws');
+const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+async function freePort(){const s=net.createServer();await new Promise((resolve,reject)=>s.once('error',reject).listen(0,'127.0.0.1',resolve));const p=s.address().port;await new Promise(r=>s.close(r));return p}
+async function waitMessage(ws,predicate,timeout=5000){return new Promise((resolve,reject)=>{const timer=setTimeout(()=>{ws.off('message',handler);reject(new Error('WebSocket message timeout'))},timeout);function handler(data,binary){if(binary)return;let msg;try{msg=JSON.parse(data.toString())}catch(_){return}if(!predicate(msg))return;clearTimeout(timer);ws.off('message',handler);resolve(msg)}ws.on('message',handler)})}
+async function openSocket(url){return new Promise((resolve,reject)=>{const ws=new WebSocket(url);ws.once('open',()=>resolve(ws));ws.once('error',reject)})}
+(async()=>{
+ const port=await freePort(),base='http://127.0.0.1:'+port;
+ const child=spawn(process.execPath,[path.join(__dirname,'server.js')],{env:{...process.env,PORT:String(port),UPLOAD_DIR:path.join(__dirname,'.test-uploads')},stdio:['ignore','pipe','pipe']});
+ let tv,phone;
+ try{
+  let ready=false;for(let i=0;i<60;i++){try{const r=await fetch(base+'/health');if(r.ok){ready=true;break}}catch(_){}await wait(100)}
+  assert.equal(ready,true,'Bridge health endpoint');
+  const sessionResponse=await fetch(base+'/api/tv/session',{method:'POST'});assert.equal(sessionResponse.status,201);
+  const session=await sessionResponse.json();assert.match(session.code,/^\d{6}$/);assert.ok(session.token);
+  tv=await openSocket('ws://127.0.0.1:'+port+'/ws?token='+encodeURIComponent(session.token));
+  const invalid=await fetch(base+'/api/pair/join',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({code:'999999'})});assert.equal(invalid.status,404);
+  const phoneNotice=waitMessage(tv,m=>m.type==='peer-status'&&m.role==='phone'&&m.connected);
+  const response=await fetch(base+'/api/pair/join',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({code:session.code,deviceName:'SONORA test'})});assert.equal(response.status,200);
+  const paired=await response.json();assert.equal(paired.tvOnline,true);
+  phone=await openSocket('ws://127.0.0.1:'+port+'/ws?token='+encodeURIComponent(paired.token));
+  const tvNotice=waitMessage(phone,m=>m.type==='peer-status'&&m.role==='tv'&&m.connected);
+  await Promise.all([phoneNotice,tvNotice]);
+  const metadataNotice=waitMessage(tv,m=>m.type==='metadata'&&m.title==='Connection test');phone.send(JSON.stringify({type:'metadata',title:'Connection test',artist:'SONORA'}));
+  assert.equal((await metadataNotice).from,'phone');
+  const controlNotice=waitMessage(phone,m=>m.type==='play'&&m.from==='tv');tv.send(JSON.stringify({type:'play'}));await controlNotice;
+  const tvDown=waitMessage(phone,m=>m.type==='peer-status'&&m.role==='tv'&&!m.connected);tv.close();await tvDown;
+  tv=await openSocket('ws://127.0.0.1:'+port+'/ws?token='+encodeURIComponent(session.token));
+  const phoneOnTv=waitMessage(tv,m=>m.type==='peer-status'&&m.role==='phone'&&m.connected);
+  const tvOnPhone=waitMessage(phone,m=>m.type==='peer-status'&&m.role==='tv'&&m.connected);
+  await Promise.all([phoneOnTv,tvOnPhone]);
+  const phoneDown=waitMessage(tv,m=>m.type==='peer-status'&&m.role==='phone'&&!m.connected);phone.close();await phoneDown;
+  console.log('SONORA Bridge connectivity smoke test: PASS');
+  console.log('- TV-generated six-digit code and session token');
+  console.log('- Invalid code rejection');
+  console.log('- Phone joins with TV code');
+  console.log('- Two-way peer presence');
+  console.log('- Metadata and remote playback command relay');
+  console.log('- TV reconnect and phone disconnect notifications');
+ }finally{try{phone?.close()}catch(_){}try{tv?.close()}catch(_){}child.kill('SIGTERM');await wait(250)}
+})().catch(error=>{console.error(error);process.exitCode=1});
