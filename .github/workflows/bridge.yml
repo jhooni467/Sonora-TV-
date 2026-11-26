@@ -39,3 +39,10 @@ jobs:
           grep -q "playback-state" receiver.html
           grep -q "parseLrc" receiver.html
           grep -q "phone-command" server/server.js
+          grep -q "headerUtf8" server/server.js
+          grep -q "x-track-title-b64" server/smoke-test.js
+          grep -q "Enhanced LRC word timestamps" server/smoke-test.js
+          grep -q "lrc-char" receiver.html
+          grep -q "lrc-word" receiver.html
+          grep -q "fp-lyric-char" index.html
+          grep -q "fp-lyric-word" index.html
