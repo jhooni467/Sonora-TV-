@@ -6,15 +6,55 @@
 <main class="layout"><section class="card"><div class="eyebrow">VINCULA TU TELÉFONO</div><h1>Conecta SONORA</h1><p>Escanea el código QR desde SONORA o introduce el código de seis dígitos en tu teléfono. Ambos dispositivos deben tener conexión a internet.</p><div class="status"><span class="dot" id="dot"></span><span id="status">Preparando conexión…</span></div><div class="qr-wrap" id="qrcode"></div><div class="pair-code" id="pairCode">------</div><p class="muted">El código caduca después de 15 minutos.</p><div class="actions"><button class="primary" id="newCode">Generar otro código</button><button class="secondary" id="copyCode">Copiar código</button></div><div class="note" id="bridgeHint">Configura la dirección del servidor de conexión para comenzar.</div><div class="field"><input id="bridgeUrl" type="url" placeholder="https://tu-servidor.onrender.com"><button class="secondary" id="saveBridge">Guardar servidor</button></div></section>
 <section class="card"><div class="eyebrow">REPRODUCCIÓN REMOTA</div><h1 id="title">Esperando música</h1><p id="artist">Conecta tu teléfono para comenzar.</p><div class="track"><div class="art" id="art"><svg viewBox="0 0 24 24" width="42" height="42" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div><div><div class="status" id="connectionState">Sin teléfono conectado</div><p id="album">SONORA TV</p></div></div><div class="controls"><button id="prev" aria-label="Anterior"><svg viewBox="0 0 24 24" width="25" height="25" fill="currentColor"><path d="M6 5h2v14H6zM20 6v12L9 12z"/></svg></button><button class="main" id="toggle" aria-label="Reproducir o pausar"><svg viewBox="0 0 24 24" width="30" height="30" fill="currentColor"><path d="M8 5.5v13L19 12z"/></svg></button><button id="next" aria-label="Siguiente"><svg viewBox="0 0 24 24" width="25" height="25" fill="currentColor"><path d="M16 5h2v14h-2zM4 6v12l11-6z"/></svg></button></div><input id="seek" type="range" min="0" max="1000" value="0" style="width:100%;accent-color:#2D90A7"><p id="clock" class="muted">0:00 / 0:00</p><div class="eyebrow" style="text-align:center;margin-top:22px">LETRAS</div><div class="lyrics" id="lyrics">Las letras aparecerán aquí cuando SONORA las comparta.</div><audio id="audio" playsinline></audio><p class="note">La reproducción se inicia desde el teléfono o con el control de esta pantalla.</p></section></main></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script>
-(()=>{'use strict';const $=id=>document.getElementById(id),audio=$('audio');let bridge='',token='',socket=null,code='',duration=0,seeking=false;
+(()=>{'use strict';const $=id=>document.getElementById(id),audio=$('audio');let bridge='',token='',socket=null,code='',duration=0,seeking=false,reconnectTimer=null,reconnectAttempt=0,phoneConnected=false;
 try{bridge=localStorage.getItem('sonora-bridge-url')||''}catch(_){}$('bridgeUrl').value=bridge;
 function status(text,ok=false){$('status').textContent=text;$('dot').style.background=ok?'#53F2B8':'#f0b44a'}
 function fmt(n){n=Math.max(0,Math.floor(n||0));return Math.floor(n/60)+':'+String(n%60).padStart(2,'0')}
 function setMeta(m){if(m.title)$('title').textContent=m.title;if(m.artist)$('artist').textContent=m.artist;if(m.album)$('album').textContent=m.album;if(m.artworkDataUrl||m.artworkUrl){const img=document.createElement('img');img.src=m.artworkDataUrl||m.artworkUrl;img.onerror=()=>img.remove();$('art').replaceChildren(img)}if(m.durationMs)duration=m.durationMs/1000}
-function connectSocket(){if(!token)return;const u=new URL(bridge);u.protocol=u.protocol==='https:'?'wss:':'ws:';u.pathname='/ws';u.search='?token='+encodeURIComponent(token);socket=new WebSocket(u);socket.onopen=()=>status('Servidor conectado · esperando teléfono',true);socket.onclose=()=>status('Conexión perdida · intentando reconectar');socket.onerror=()=>status('No se pudo conectar al servidor');socket.onmessage=e=>{if(typeof e.data!=='string')return;let m;try{m=JSON.parse(e.data)}catch(_){return}handle(m)}}
-function handle(m){if(m.type==='paired'){status('Teléfono vinculado: '+(m.deviceName||'SONORA'),true);$('connectionState').textContent='Teléfono conectado'}if(m.type==='peer-status'&&m.role==='phone')$('connectionState').textContent=m.connected?'Teléfono conectado':'Sin teléfono conectado';if(m.type==='metadata')setMeta(m);if(m.type==='lyrics')$('lyrics').textContent=m.text||'Sin letras disponibles';if(m.type==='media-ready'){audio.src=bridge+m.url;audio.play().catch(()=>status('Archivo recibido · pulsa reproducir',true));$('title').textContent=m.name||'Audio recibido'}if(m.type==='stream-start'){audio.src=bridge+m.url;audio.play().catch(()=>status('Transmisión lista · pulsa reproducir',true));$('title').textContent=m.name||'Audio en directo';if(m.artist)$('artist').textContent=m.artist}if(m.type==='play')audio.play().catch(()=>{});if(m.type==='pause'||m.type==='stop')audio.pause();if(m.type==='toggle'){if(audio.paused)audio.play().catch(()=>{});else audio.pause()}if(m.type==='seek'&&Number.isFinite(m.positionMs))audio.currentTime=m.positionMs/1000;if(m.type==='volume'&&Number.isFinite(m.value))audio.volume=Math.max(0,Math.min(1,m.value));if(m.type==='next'||m.type==='previous')send({type:m.type})}
+function scheduleReconnect(){
+ if(!token||reconnectTimer)return;
+ const delay=Math.min(1000*Math.pow(2,reconnectAttempt++),15000);
+ status('Conexión interrumpida · reconectando en '+Math.ceil(delay/1000)+' s');
+ reconnectTimer=setTimeout(()=>{reconnectTimer=null;connectSocket()},delay);
+}
+function connectSocket(){
+ if(!token)return;
+ const old=socket;socket=null;if(old){old.onclose=null;old.close(1000,'Reconnect');}
+ const u=new URL(bridge);u.protocol=u.protocol==='https:'?'wss:':'ws:';u.pathname='/ws';u.search='?token='+encodeURIComponent(token);
+ const ws=new WebSocket(u);socket=ws;
+ ws.onopen=()=>{reconnectAttempt=0;if(reconnectTimer){clearTimeout(reconnectTimer);reconnectTimer=null;}status(phoneConnected?'Teléfono conectado':'Servidor conectado · esperando teléfono',true);};
+ ws.onclose=()=>{if(socket!==ws)return;socket=null;$('connectionState').textContent='Sin conexión con el servidor';scheduleReconnect();};
+ ws.onerror=()=>status('Error en el canal de conexión');
+ ws.onmessage=e=>{if(typeof e.data!=='string')return;let m;try{m=JSON.parse(e.data)}catch(_){return}handle(m)};
+}
+function handle(m){
+ if(m.type==='paired'){status('Teléfono vinculado: '+(m.deviceName||'SONORA'),true);$('connectionState').textContent='Teléfono conectado';phoneConnected=true;}
+ if(m.type==='peer-status'&&m.role==='phone'){phoneConnected=!!m.connected;$('connectionState').textContent=phoneConnected?'Teléfono conectado':'Sin teléfono conectado';status(phoneConnected?'SONORA está conectada':'Esperando teléfono',true);}
+ if(m.type==='metadata')setMeta(m);
+ if(m.type==='lyrics')$('lyrics').textContent=m.text||'Sin letras disponibles';
+ if(m.type==='media-ready'){audio.src=new URL(m.url,bridge).href;audio.play().catch(()=>status('Archivo recibido · pulsa reproducir',true));$('title').textContent=m.name||'Audio recibido';}
+ if(m.type==='stream-start'){audio.src=new URL(m.url,bridge).href;audio.play().catch(()=>status('Transmisión lista · pulsa reproducir',true));$('title').textContent=m.name||'Audio en directo';if(m.artist)$('artist').textContent=m.artist;}
+ if(m.type==='play')audio.play().catch(()=>{});
+ if(m.type==='pause'||m.type==='stop')audio.pause();
+ if(m.type==='toggle'){if(audio.paused)audio.play().catch(()=>{});else audio.pause();}
+ if(m.type==='seek'&&Number.isFinite(m.positionMs)&&Number.isFinite(audio.duration))audio.currentTime=Math.min(audio.duration,Math.max(0,m.positionMs/1000));
+ if(m.type==='volume'&&Number.isFinite(m.value))audio.volume=Math.max(0,Math.min(1,m.value));
+ if(m.type==='next'||m.type==='previous')send({type:m.type});
+}
 function send(m){if(socket&&socket.readyState===WebSocket.OPEN)socket.send(JSON.stringify(m))}
-async function createSession(){if(!bridge){status('Introduce primero la URL del servidor');return}try{const r=await fetch(bridge+'/api/tv/session',{method:'POST'});if(!r.ok)throw Error('Servidor respondió '+r.status);const d=await r.json();token=d.token;code=d.code;$('pairCode').textContent=code;$('qrcode').replaceChildren();const payload=bridge+'|'+code;if(window.QRCode)new QRCode($('qrcode'),{text:payload,width:190,height:190,colorDark:'#0B2558',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});else $('qrcode').textContent='QR no disponible';status('Código listo · esperando teléfono');if(socket)socket.close();connectSocket()}catch(e){status('Error: '+e.message)}}
+async function createSession(){
+ if(!bridge){status('Introduce primero la URL del servidor');return}
+ try{
+  if(reconnectTimer){clearTimeout(reconnectTimer);reconnectTimer=null;}
+  const r=await fetch(bridge+'/api/tv/session',{method:'POST'});if(!r.ok)throw Error('Servidor respondió '+r.status);
+  const d=await r.json();token=d.token;code=d.code;phoneConnected=false;reconnectAttempt=0;
+  $('pairCode').textContent=code;$('qrcode').replaceChildren();
+  const payload=bridge+'|'+code;
+  if(window.QRCode)new QRCode($('qrcode'),{text:payload,width:190,height:190,colorDark:'#0B2558',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
+  else $('qrcode').textContent='QR no disponible · usa el código de seis dígitos';
+  status('Código listo · esperando teléfono');connectSocket();
+ }catch(e){status('Error: '+e.message)}
+}
 $('saveBridge').onclick=()=>{try{const u=new URL($('bridgeUrl').value.trim());if(!['http:','https:'].includes(u.protocol))throw Error();bridge=u.origin;localStorage.setItem('sonora-bridge-url',bridge);$('bridgeHint').textContent='Servidor: '+bridge;createSession()}catch(_){status('Introduce una URL HTTPS válida')}};
 $('newCode').onclick=createSession;$('copyCode').onclick=()=>{if(code)navigator.clipboard?.writeText(code).then(()=>status('Código copiado',true)).catch(()=>{})};
 $('toggle').onclick=()=>{if(audio.paused)audio.play().catch(()=>{});else audio.pause()};$('prev').onclick=()=>send({type:'previous'});$('next').onclick=()=>send({type:'next'});
