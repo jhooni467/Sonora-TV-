@@ -1,6 +1,18 @@
 # SONORA TV
 
-Reproductor de música web diseñado para televisores. No necesita APK ni instalación: se abre desde el navegador de la TV.
+Reproductor de música web creado **exclusivamente para televisores**. No necesita APK ni instalación: se abre desde el navegador integrado de la TV.
+
+## Diseño
+
+La interfaz está pensada para pantallas de televisión en formato horizontal, con tarjetas limpias y navegación desde el control remoto. La escala se ajusta a distintos tamaños y resoluciones de TV, desde pantallas HD hasta 4K.
+
+Paleta de color:
+- Purplish Blue: #0B2558
+- Blue Oasis: #1C618B
+- Larkspur: #2D90A7
+- Blue Lemonade: #3FBFC0
+- Aventurine: #53F2B8
+- Spearmint Water: #D0FEFF
 
 ## Funciones
 
@@ -9,8 +21,7 @@ Reproductor de música web diseñado para televisores. No necesita APK ni instal
 - Guardar biblioteca y archivos en IndexedDB, cuando el navegador lo permite.
 - Favoritos, lista de reproducción, aleatorio y repetición.
 - Control de reproducción, volumen y posición de la canción.
-- Interfaz horizontal y controles grandes para mando a distancia.
-- Navegación mediante teclado y teclas multimedia compatibles.
+- Navegación por flechas, OK y teclas multimedia compatibles con el control remoto.
 
 ## Publicar con GitHub Pages
 
